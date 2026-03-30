@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Достижения ученика</title>
+    <link rel="stylesheet" href="css/main_style.css">
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .page-wrapper {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 900px;
+            padding: 24px;
+        }
+        .page-wrapper h1 {
+            margin-bottom: 14px;
+            font-size: 24px;
+            color: #2f2f2f;
+        }
+        .ach-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .ach-item {
+            border: 1px solid #ebedf4;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 12px 14px;
+            color: #333;
+            background: #f9faff;
+        }
+        .no-data {
+            text-align: center;
+            color: #7a7a7a;
+            margin-top: 12px;
+        }
+        .back-btn {
+            margin-top: 12px;
+            display: inline-block;
+            background: #667eea;
+            color: #fff;
+            border: 0;
+            padding: 10px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <h1>Достижения</h1>
+        <div id="info"></div>
+        <ul id="achievementsList" class="ach-list" style="display:none;"></ul>
+        <p class="no-data" id="noAchievements"></p>
+        <a class="back-btn" href="a1s-layout.html">Вернуться</a>
+    </div>
+    <script>
+        const infoEl = document.getElementById('info');
+        const achievementsList = document.getElementById('achievementsList');
+        const noAchievementsEl = document.getElementById('noAchievements');
+
+        function showMessage(txt, isError = false) {
+            infoEl.textContent = txt;
+            infoEl.style.color = isError ? '#d32f2f' : '#2d2d72';
+        }
+
+        async function loadInfo() {
+            try {
+                const response = await fetch('json/student_info.json');
+                return await response.json();
+            } catch (error) {
+                showMessage('Ошибка при загрузке данных достижений', true);
+                return null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentUserRaw = sessionStorage.getItem('currentUser');
+            if (!currentUserRaw) {
+                showMessage('Сначала войдите на сайте.', true);
+                noAchievementsEl.textContent = 'Данные отсутствуют, пожалуйста, выполните вход.';
+                return;
+            }
+
+            const user = JSON.parse(currentUserRaw);
+            showMessage(`Пользователь: ${user.fullname || user.login}`);
+
+            const infoData = await loadInfo();
+            if (!infoData) {
+                noAchievementsEl.textContent = 'Невозможно загрузить достижения.';
+                return;
+            }
+
+            const student = infoData.find(r => r.fullname === user.fullname || r.login === user.login);
+            if (!student || !Array.isArray(student.achievements) || student.achievements.length === 0) {
+                noAchievementsEl.textContent = 'Достижения для текущего пользователя не найдены.';
+                return;
+            }
+
+            student.achievements.forEach((achievement) => {
+                const li = document.createElement('li');
+                li.className = 'ach-item';
+                li.textContent = achievement;
+                achievementsList.appendChild(li);
+            });
+
+            achievementsList.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
