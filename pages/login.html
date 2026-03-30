@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кіру — Ақбөбек Portal</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .login-card { max-width: 460px; }
+    .input-icon-wrap { position: relative; }
+    .input-icon-wrap .ico {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 15px; pointer-events: none; user-select: none;
+    }
+    .input-icon-wrap input { padding-left: 40px !important; }
+    .input-icon-wrap .eye-btn {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      font-size: 16px; color: var(--gray); padding: 4px; line-height: 1;
+    }
+    .input-icon-wrap .eye-btn:hover { color: var(--p1); }
+    .auth-toggle {
+      display: flex; background: var(--cream); border-radius: 10px;
+      padding: 4px; gap: 4px; margin-bottom: 22px;
+    }
+    .auth-toggle-btn {
+      flex: 1; padding: 9px; border: none; border-radius: 8px;
+      font-family: var(--font); font-size: 13px; font-weight: 600;
+      color: var(--gray); cursor: pointer; transition: all 0.15s;
+      background: transparent;
+    }
+    .auth-toggle-btn.active {
+      background: #fff; color: var(--p1);
+      box-shadow: 0 1px 4px rgba(89,0,122,0.12);
+    }
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 18px 0; color: var(--gray); font-size: 12px;
+    }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .btn-spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .7s linear infinite; display: none;
+    }
+    .btn-spinner.show { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-6px); }
+      40%,80% { transform: translateX(6px); }
+    }
+    .shake { animation: shake .35s ease; }
+    .demo-accounts { background:var(--cream); border-radius:var(--radius-sm); padding:16px; margin-bottom:20px; }
+    .demo-accounts p { font-size:12px; color:var(--gray); font-weight:600; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.05em; }
+    .demo-acc { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border); }
+    .demo-acc:last-child { border-bottom:none; }
+    .demo-acc span { font-size:12px; color:var(--dark); }
+    .demo-acc code { font-size:11px; background:var(--border); padding:2px 6px; border-radius:4px; cursor:pointer; }
+    .demo-acc code:hover { background:var(--p1); color:#fff; }
+
+    .form-mode-toggle {
+      display: flex; background: var(--cream); border-radius: 10px;
+      padding: 4px; gap: 4px; margin-bottom: 20px;
+    }
+    .form-mode-btn {
+      flex: 1; padding: 9px; border: none; border-radius: 8px;
+      font-family: var(--font); font-size: 13px; font-weight: 600;
+      color: var(--gray); cursor: pointer; transition: all 0.15s;
+      background: transparent;
+    }
+    .form-mode-btn.active {
+      background: #fff; color: var(--p1);
+      box-shadow: 0 1px 4px rgba(89,0,122,0.12);
+    }
+    .reg-only { display: none; }
+    .reg-only.visible { display: block; }
+  </style>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <img src="https://a1s.kz/Logo_Lyc.png" alt="" style="width:32px;height:32px;object-fit:cover;border-radius:6px;" onerror="this.parentElement.innerHTML='🏫'">
+      </div>
+      <div class="login-logo-text">
+        <strong>Ақбөбек Portal</strong>
+        <span>Unified School System</span>
+      </div>
+    </div>
+
+    <h2 class="login-title">Қош келдіңіз!</h2>
+    <p class="login-sub" id="loginSub">Аккаунтыңызға кіріңіз</p>
+
+    <div class="auth-toggle">
+      <button class="auth-toggle-btn active" id="btnN8n" onclick="setAuthMode('n8n')">🔗 Авторизация</button>
+      <button class="auth-toggle-btn" id="btnDemo" onclick="setAuthMode('demo')">🧪 Demo режим</button>
+    </div>
+
+    <div id="demoPanel" style="display:none;">
+      <div class="login-tabs" id="loginTabs">
+        <button class="login-tab active" onclick="setRole('student',this)">Оқушы</button>
+        <button class="login-tab" onclick="setRole('teacher',this)">Мұғалім</button>
+        <button class="login-tab" onclick="setRole('parent',this)">Ата-ана</button>
+        <button class="login-tab" onclick="setRole('admin',this)">Админ</button>
+      </div>
+      <div class="demo-accounts">
+        <p>Demo аккаунттар — басыңыз</p>
+        <div id="demoList"></div>
+      </div>
+    </div>
+
+    <div class="form-mode-toggle" id="formModeToggle">
+      <button class="form-mode-btn active" id="btnModeLogin" onclick="setFormMode('login')">🔑 Кіру</button>
+      <button class="form-mode-btn" id="btnModeReg" onclick="setFormMode('reg')">📝 Тіркелу</button>
+    </div>
+
+    <div class="form-group">
+      <label>Логин</label>
+      <div class="input-icon-wrap">
+        <span class="ico">👤</span>
+        <input type="text" id="loginInput" placeholder="логиніңізді енгізіңіз" autocomplete="username">
+      </div>
+    </div>
+
+    <div class="form-group reg-only" id="fullnameGroup">
+      <label>Толық аты-жөні</label>
+      <div class="input-icon-wrap">
+        <span class="ico">✏️</span>
+        <input type="text" id="fullnameInput" placeholder="Аты-жөніңізді енгізіңіз">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Пароль</label>
+      <div class="input-icon-wrap">
+        <span class="ico">🔒</span>
+        <input type="password" id="passwordInput" placeholder="••••••••" autocomplete="current-password">
+        <button class="eye-btn" onclick="togglePwd(this)" tabindex="-1">👁</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary w-full btn-lg" id="loginBtn" style="margin-top:8px;justify-content:center;gap:10px;" onclick="doLogin()">
+      <div class="btn-spinner" id="btnSpinner"></div>
+      <span id="loginBtnText">Кіру →</span>
+    </button>
+
+    <div class="divider">немесе</div>
+
+    <button class="btn btn-ghost w-full" style="justify-content:center;" onclick="loginGuest()">
+      👤 Қонақ ретінде кіру
+    </button>
+
+    <div style="text-align:center;margin-top:24px;">
+      <a href="../index.html" style="font-size:13px;color:var(--gray);text-decoration:none;">← Басты бетке</a>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../json/data.js"></script>
+<script src="../js/app.js"></script>
+<script>
+// Ссылка зашита внутри, поменять через сайт нельзя
+const WEBHOOK_URL = 'https://asicapital.asia/webhook/7b9e11a5-19cb-4b7e-bf18-914908a7fe52';
+
+let authMode = 'n8n'; 
+let formMode = 'login';
+let currentRole = 'student';
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof Auth !== 'undefined' && Auth.current()) { 
+    window.location.href = 'dashboard.html'; 
+    return; 
+  }
+  const savedMode = localStorage.getItem('n8n_auth_mode') || 'n8n';
+  setAuthMode(savedMode, true);
+  renderDemo('student');
+});
+
+function setAuthMode(mode, silent) {
+  authMode = mode;
+  if (!silent) localStorage.setItem('n8n_auth_mode', mode);
+  document.getElementById('btnN8n').classList.toggle('active', mode === 'n8n');
+  document.getElementById('btnDemo').classList.toggle('active', mode === 'demo');
+  document.getElementById('demoPanel').style.display = mode === 'demo' ? 'block' : 'none';
+  document.getElementById('formModeToggle').style.display = mode === 'n8n' ? 'flex' : 'none';
+  if (mode === 'demo') setFormMode('login');
+}
+
+function setFormMode(mode) {
+  formMode = mode;
+  document.getElementById('btnModeLogin').classList.toggle('active', mode === 'login');
+  document.getElementById('btnModeReg').classList.toggle('active', mode === 'reg');
+  document.querySelectorAll('.reg-only').forEach(el => el.classList.toggle('visible', mode === 'reg'));
+  document.getElementById('loginBtnText').textContent = mode === 'reg' ? 'Тіркелу →' : 'Кіру →';
+  document.getElementById('loginSub').textContent = mode === 'reg' ? 'Жаңа аккаунт жасаңыз' : 'Аккаунтыңызға кіріңіз';
+}
+
+const demos = {
+  student: [
+    { login: 'aizat.bekova', pass: 'pass123', name: 'Айзат Б. (10А)' },
+    { login: 'hasan.nurmagambetov', pass: 'hasan123', name: 'Хасан Н. (11А)' },
+    { login: 'nurasyl.dzhaksybekov', pass: 'pass456', name: 'Нурасыл Д. (10А)' },
+  ],
+  teacher: [{ login: 'teacher1', pass: 'teacher123', name: 'Аманова Г. (Математика)' }],
+  parent: [{ login: 'parent1', pass: 'parent123', name: 'Ата-ана (Айзат Б.)' }],
+  admin: [{ login: 'admin', pass: 'admin123', name: 'Директор Мұсаев' }],
+};
+
+function setRole(role, btn) {
+  currentRole = role;
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  btn?.classList.add('active');
+  renderDemo(role);
+}
+
+function renderDemo(role) {
+  document.getElementById('demoList').innerHTML = (demos[role] || []).map(d => `
+    <div class="demo-acc">
+      <span>${d.name}</span>
+      <div style="display:flex;gap:6px">
+        <code onclick="fillLogin('${d.login}','${d.pass}')">${d.login}</code>
+        <code onclick="fillLogin('${d.login}','${d.pass}')">${d.pass}</code>
+      </div>
+    </div>
+  `).join('');
+}
+
+function fillLogin(l, p) {
+  document.getElementById('loginInput').value = l;
+  document.getElementById('passwordInput').value = p;
+}
+
+function togglePwd(btn) {
+  const inp = document.getElementById('passwordInput');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = on;
+  document.getElementById('btnSpinner').classList.toggle('show', on);
+  document.getElementById('loginBtnText').textContent = on ? 'Тексеру...' : (formMode === 'reg' ? 'Тіркелу →' : 'Кіру →');
+}
+
+async function doLogin() {
+  const login = document.getElementById('loginInput').value.trim();
+  const password = document.getElementById('passwordInput').value.trim();
+
+  if (!login || !password) { 
+    shakeCard(); 
+    toast('Логин мен парольді енгізіңіз', 'error'); 
+    return; 
+  }
+
+  setLoading(true);
+
+  if (authMode === 'n8n') {
+    await loginViaN8n(login, password);
+  } else {
+    loginLocal(login, password);
+  }
+
+  setLoading(false);
+}
+
+async function loginViaN8n(login, password) {
+  const payload = { action: formMode, login, password };
+  if (formMode === 'reg') {
+    const fn = document.getElementById('fullnameInput').value.trim();
+    if (!fn) { toast('Аты-жөніңізді жазыңыз', 'error'); return; }
+    payload.fullname = fn;
+  }
+
+  try {
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error('Сервер қатесі');
+
+    const raw = await res.json();
+    const data = Array.isArray(raw) ? raw[0] : raw;
+
+    // СТРОГАЯ ПРОВЕРКА: Если n8n вернул ошибку или success: false
+    if (!data || data.error || data.success === false) {
+      shakeCard();
+      toast(data?.message || 'Пайдаланушы табылмады немесе деректер қате', 'error');
+      return;
+    }
+
+    const roleMap = { 'администрация': 'admin', 'учитель': 'teacher', 'ученик': 'student', 'родитель': 'parent' };
+    const role = roleMap[data.status] || 'student';
+
+    const user = {
+      id: data.id || login,
+      login: data.login || login,
+      fullname: data.fullname || login,
+      role,
+      status: data.status,
+      grade: data.grade || '—',
+      gpa: data.gpa || 0,
+      bilimClass: data.bilimClass || {},
+      achievements: data.achievements || [],
+      goals: data.goals || [],
+      riskLevel: data.riskLevel || 'low',
+      rank: data.rank || null,
+    };
+
+    sessionStorage.setItem('aqbobek_user', JSON.stringify(user));
+    toast(`Қош келдіңіз, ${user.fullname}! ✓`, 'success');
+    setTimeout(() => window.location.href = 'dashboard.html', 700);
+
+  } catch (e) {
+    shakeCard();
+    toast('Байланыс қатесі: n8n жауап бермеді', 'error');
+  }
+}
+
+function loginLocal(login, password) {
+  if (typeof Auth === 'undefined') { toast('Auth жүйесі жүктелмеді', 'error'); return; }
+  const user = Auth.login(login, password);
+  if (user) {
+    toast(`Қош келдіңіз, ${user.fullname || user.login}! ✓`, 'success');
+    setTimeout(() => window.location.href = 'dashboard.html', 700);
+  } else {
+    shakeCard();
+    toast('Логин немесе пароль қате (Demo)', 'error');
+  }
+}
+
+function loginGuest() {
+  const guest = { id: 0, login: 'guest', fullname: 'Қонақ', role: 'student', gpa: 0, bilimClass: {}, achievements: [], goals: [], events: [], riskLevel: 'low', grade: '—' };
+  sessionStorage.setItem('aqbobek_user', JSON.stringify(guest));
+  toast('Қонақ ретінде кірдіңіз', 'info');
+  setTimeout(() => window.location.href = 'dashboard.html', 500);
+}
+
+function shakeCard() {
+  const card = document.querySelector('.login-card');
+  card.classList.remove('shake');
+  void card.offsetWidth;
+  card.classList.add('shake');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

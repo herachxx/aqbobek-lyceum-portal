@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Бағалар — Ақбөбек Portal</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">📊 Бағалар (BilimClass)</div>
+      <div class="topbar-actions">
+        <div class="avatar" id="topbarAvatar"></div>
+      </div>
+    </div>
+    <div class="page-content">
+      <!-- BilimClass badge -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;padding:14px 18px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:var(--radius);border:1px solid #93c5fd;">
+        <span style="font-size:20px">🔗</span>
+        <div>
+          <div style="font-weight:700;font-size:14px;color:#1e40af">BilimClass интеграциясы</div>
+          <div style="font-size:12px;color:#3b82f6">Бағалар BilimClass жүйесінен автоматты жүктелген · Соңғы жаңарту: бүгін</div>
+        </div>
+        <span class="badge badge-blue" style="margin-left:auto">✓ Синхрондалды</span>
+      </div>
+
+      <!-- Stats -->
+      <div class="quick-stats" id="gradeStats"></div>
+
+      <!-- Main content -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-top:20px;">
+        <!-- Table -->
+        <div class="card">
+          <div class="section-header">
+            <h3>Пәндер бойынша бағалар</h3>
+            <select id="quarterSelect" class="btn btn-ghost btn-sm" style="border:1px solid var(--border);padding:6px 10px;border-radius:6px;">
+              <option value="all">Барлық баллдар</option>
+              <option value="avg">Орташа балл</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table id="gradesTable">
+              <thead>
+                <tr>
+                  <th>Пән</th>
+                  <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th>
+                  <th>Орта</th><th>Баға</th><th>Үрдіс</th>
+                </tr>
+              </thead>
+              <tbody id="gradesBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Radar -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <h3 style="margin-bottom:12px">Бейін диаграммасы</h3>
+            <div style="height:200px"><canvas id="radarChart"></canvas></div>
+          </div>
+          <div class="card" id="trendCard">
+            <h3 style="margin-bottom:12px">Үрдіс</h3>
+            <div style="height:150px"><canvas id="trendChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subject detail chart -->
+      <div class="card" style="margin-top:20px;">
+        <div class="section-header">
+          <h3>Пән бойынша толық диаграмма</h3>
+          <select id="subjectSelect" class="btn btn-ghost btn-sm" style="border:1px solid var(--border);padding:6px 10px;border-radius:6px;"></select>
+        </div>
+        <div style="height:200px"><canvas id="subjectDetailChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../json/data.js"></script>
+<script src="../js/app.js"></script>
+<script>
+const user = Auth.require();
+buildSidebar('grades', user.role);
+document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+
+// Get student data
+let student;
+if (user.role === 'student') {
+  student = LYCEUM_DATA.students.find(s => s.id === user.id);
+} else if (user.role === 'parent') {
+  const parent = LYCEUM_DATA.parents.find(p => p.id === user.id);
+  student = LYCEUM_DATA.students.find(s => s.id === parent?.childId);
+} else {
+  student = LYCEUM_DATA.students[0];
+}
+
+if (!student || !student.bilimClass) {
+  document.getElementById('gradesBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--gray)">Бағалар табылмады</td></tr>';
+} else {
+  const grades = student.bilimClass;
+  const subjects = Object.keys(grades);
+  const avgs = subjectAvg(grades);
+  const overall = overallAvg(grades);
+
+  // Stats
+  const statsEl = document.getElementById('gradeStats');
+  const best = subjects.reduce((a, b) => avgs[a] >= avgs[b] ? a : b);
+  const worst = subjects.reduce((a, b) => avgs[a] <= avgs[b] ? a : b);
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="stat-icon purple">📊</div><div><div class="stat-num">${overall}</div><div class="stat-label">Жалпы орта</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">⭐</div><div><div class="stat-num">${avgs[best]}</div><div class="stat-label">Үздік: ${best}</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">📉</div><div><div class="stat-num">${avgs[worst]}</div><div class="stat-label">Жетілдіру: ${worst}</div></div></div>
+    <div class="stat-card"><div class="stat-icon gold">🏆</div><div><div class="stat-num">#${student.rank}</div><div class="stat-label">Рейтинг орны</div></div></div>
+  `;
+
+  // Table
+  const tbody = document.getElementById('gradesBody');
+  subjects.forEach(sub => {
+    const gs = grades[sub];
+    const a = avgs[sub];
+    const cells = gs.map(g => `<td><div class="grade-cell ${gradeColor(g)}">${g}</div></td>`).join('');
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${sub}</strong></td>
+        ${cells}
+        ${'<td></td>'.repeat(7 - gs.length)}
+        <td><strong style="color:var(--p1)">${a}</strong></td>
+        <td><div class="grade-cell ${gradeColor(a)}">${gradeLabel(a)}</div></td>
+        <td>${trendArrow(gs)}</td>
+      </tr>
+    `;
+  });
+
+  // Radar
+  setTimeout(() => {
+    radarChart(document.getElementById('radarChart'), subjects, Object.values(avgs));
+
+    // Trend (all subjects avg over time)
+    const periods = ['1','2','3','4','5','6','7'];
+    const allAvg = periods.map((_, i) => {
+      const vals = subjects.map(s => grades[s][i] || 0);
+      return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+    });
+    lineChart(document.getElementById('trendChart'), periods, [{ label: 'Жалпы орта', data: allAvg }]);
+
+    // Subject detail
+    const subSel = document.getElementById('subjectSelect');
+    subjects.forEach(s => { subSel.innerHTML += `<option value="${s}">${s}</option>`; });
+    let detailChart = null;
+    function updateDetail() {
+      const sub = subSel.value;
+      const data = grades[sub];
+      if (detailChart) detailChart.destroy();
+      detailChart = lineChart(document.getElementById('subjectDetailChart'), data.map((_,i)=>`Тест ${i+1}`), [{ label: sub, data }]);
+    }
+    subSel.addEventListener('change', updateDetail);
+    updateDetail();
+  }, 50);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ақбөбек Лицей — Unified School Portal</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .landing-hero-visual { animation: floatUp 0.8s ease both; }
+    @keyframes floatUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    .hero-animate { animation: floatUp 0.7s ease both; }
+    .hero-animate-2 { animation: floatUp 0.7s 0.15s ease both; }
+    .hero-animate-3 { animation: floatUp 0.7s 0.3s ease both; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="landing-header">
+  <div class="landing-header-inner">
+    <a href="index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+      <div style="width:38px;height:38px;background:var(--p1);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <img src="https://a1s.kz/Logo_Lyc.png" alt="" style="width:26px;height:26px;object-fit:cover;" onerror="this.parentElement.innerHTML='🏫'">
+      </div>
+      <div>
+        <div style="font-family:var(--font-serif);font-size:16px;color:var(--p1);font-weight:700;">Ақбөбек</div>
+        <div style="font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:0.08em;">Unified Portal</div>
+      </div>
+    </a>
+
+    <nav class="landing-nav">
+      <a href="#about">Лицей туралы</a>
+      <a href="#features">Мүмкіндіктер</a>
+      <a href="#events">Іс-шаралар</a>
+      <a href="#leaderboard">Рейтинг</a>
+      <a href="pages/kiosk.html" target="_blank">Kiosk режимі</a>
+    </nav>
+
+    <div style="display:flex;align-items:center;gap:8px">
+      <a href="pages/login.html" class="btn btn-outline btn-sm">Кіру</a>
+      <a href="pages/dashboard.html" class="btn btn-primary btn-sm">Портал →</a>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ HERO ═══ -->
+<section class="landing-hero">
+  <div class="landing-hero-glow1"></div>
+  <div class="landing-hero-glow2"></div>
+  <div class="landing-hero-inner">
+    <div>
+      <div class="landing-hero-badge hero-animate">IT бағыты · Лицей-Интернат · Ақтөбе</div>
+      <h1 class="hero-animate-2">Ақбөбек<br><em>Unified</em><br>Portal</h1>
+      <p class="hero-animate-3">Бағалар, жетістіктер, іс-шаралар — барлығы бір жерде. Мектептің толық сандық экожүйесі.</p>
+      <div class="hero-actions hero-animate-3">
+        <a href="pages/login.html" class="btn-hero-primary">Портал →</a>
+        <a href="#features" class="btn-hero-outline">Толығырақ</a>
+      </div>
+    </div>
+    <div class="landing-hero-visual" style="animation-delay:0.3s">
+      <div class="hero-stats-card">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:20px;">📊 Лицей көрсеткіштері</div>
+        <div class="hero-stats-grid">
+          <div class="hero-stat">
+            <div class="hero-stat-num">118</div>
+            <div class="hero-stat-label">Орт. ЕНТ балы</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">24+</div>
+            <div class="hero-stat-label">Олимпиада жеңімпаздары</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">4.5</div>
+            <div class="hero-stat-label">Орта GPA</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">100+</div>
+            <div class="hero-stat-label">Оқушы</div>
+          </div>
+        </div>
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.08)">
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">Жаңа жетістік</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:rgba(192,132,252,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;">🏆</div>
+            <div>
+              <div style="font-size:13px;color:#fff;font-weight:600;">Хасан Н. — IMO Алтын</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.5);">Халықаралық математика олимпиадасы</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ABOUT ═══ -->
+<section id="about" class="landing-section">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;">
+    <div>
+      <div class="section-label">Лицей туралы</div>
+      <h2 class="section-title" style="margin-bottom:20px;">Батыс Қазақстанның үздік IT лицейі</h2>
+      <p style="color:var(--gray);line-height:1.8;margin-bottom:20px;font-size:15px;">Ақбөбек лицейі — Ақтөбедегі дарынды балаларға арналған IT бағытындағы лицей-интернат. Біздің мақсатымыз — жастарды болашақтың технологиялық лидерлері ретінде дайындау.</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        <div class="card" style="text-align:center;padding:20px;">
+          <div style="font-family:var(--font-serif);font-size:28px;color:var(--p1);">7–11</div>
+          <div style="font-size:12px;color:var(--gray)">Сынып</div>
+        </div>
+        <div class="card" style="text-align:center;padding:20px;">
+          <div style="font-family:var(--font-serif);font-size:28px;color:var(--p1);">100+</div>
+          <div style="font-size:12px;color:var(--gray)">Оқушы</div>
+        </div>
+        <div class="card" style="text-align:center;padding:20px;">
+          <div style="font-family:var(--font-serif);font-size:28px;color:var(--p1);">3</div>
+          <div style="font-size:12px;color:var(--gray)">IT үйірме</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="background:linear-gradient(135deg,var(--p2),var(--p1));border-radius:20px;padding:40px;color:#fff;">
+        <div style="font-family:var(--font-serif);font-size:22px;margin-bottom:16px;">Mission · Vision · Values</div>
+        <p style="color:rgba(255,255,255,0.7);font-size:14px;line-height:1.8;">Инновациялық білім беру, ғылыми зерттеу, және технологиялық дамуды бір жерде ұштастыратын алдыңғы қатарлы мектеп. Әр оқушы — болашақтың инноваторы.</p>
+        <div style="margin-top:24px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="color:var(--accent)">✓</span> Математика & Физика олимпиада бағыты</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="color:var(--accent)">✓</span> IT, Робототехника, AI үйірмелер</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="color:var(--accent)">✓</span> Халықаралық бағдарламалар</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="color:var(--accent)">✓</span> Заманауи кампус & интернат</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section id="features" class="landing-features">
+  <div class="landing-features-inner">
+    <div style="text-align:center;margin-bottom:48px;">
+      <div class="section-label">Портал мүмкіндіктері</div>
+      <h2 style="font-family:var(--font-serif);font-size:36px;">Барлығы бір жерде</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">BilimClass интеграциясы</div>
+        <div class="feature-desc">Барлық бағалар BilimClass жүйесінен автоматты жүктеледі. Үрдіс, орташа балл, жетілдіру ұсыныстары.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-title">AI Ментор</div>
+        <div class="feature-desc">Жеке AI ментор: үлгерімді талдайды, мансап бағытын ұсынады, дайындық жоспарын жасайды.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📺</div>
+        <div class="feature-title">Kiosk Mode</div>
+        <div class="feature-desc">Мектеп дәлізіндегі экранға арналған: авто-айналым, үздік оқушылар, жаңалықтар, іс-шаралар.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏆</div>
+        <div class="feature-title">Жетістіктер жүйесі</div>
+        <div class="feature-desc">Олимпиада, хакатон, ғылыми жобалар. Рейтинг пен бәсекелестік оқушыны ынталандырады.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚠️</div>
+        <div class="feature-title">Тәуекел аймағы</div>
+        <div class="feature-desc">Мұғалімдер үшін: бағасы төмен немесе кемелденіп бара жатқан оқушыларды анықтайды.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👪</div>
+        <div class="feature-title">Ата-ана байланысы</div>
+        <div class="feature-desc">Ата-аналар баласының үлгерімін, жетістіктерін, іс-шараларын нақты уақытта бақылайды.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ EVENTS ═══ -->
+<section id="events" class="landing-section">
+  <div class="section-label">Жақын іс-шаралар</div>
+  <div class="section-header">
+    <h2 class="section-title">Іс-шаралар</h2>
+    <a href="pages/events.html" class="btn btn-outline">Барлығы →</a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;" id="eventsGrid"></div>
+</section>
+
+<!-- ═══ LEADERBOARD ═══ -->
+<section id="leaderboard" style="background:var(--p2);padding:80px 32px;">
+  <div style="max-width:1280px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:40px;">
+      <div class="section-label" style="color:var(--accent)">Рейтинг</div>
+      <h2 style="font-family:var(--font-serif);font-size:36px;color:#fff;">Үздік оқушылар</h2>
+    </div>
+    <div style="background:rgba(255,255,255,0.06);border-radius:var(--radius);overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+      <div class="table-wrap">
+        <table style="color:#fff;">
+          <thead>
+            <tr style="background:rgba(0,0,0,0.2);">
+              <th style="color:var(--accent)">Марапат</th>
+              <th style="color:var(--accent)">Орын</th>
+              <th style="color:var(--accent)">Аты-жөні</th>
+              <th style="color:var(--accent)">Сынып</th>
+              <th style="color:var(--accent)">GPA</th>
+              <th style="color:var(--accent)">Жетістіктер</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody" style="color:rgba(255,255,255,0.85)"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="pages/ranking.html" class="btn btn-accent">Толық рейтинг →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ NEWS ═══ -->
+<section class="landing-section">
+  <div class="section-label">Жаңалықтар</div>
+  <div class="section-header">
+    <h2 class="section-title">Соңғы жаңалықтар</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;" id="newsGrid"></div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+<section style="background:linear-gradient(135deg,var(--p1),var(--p3));padding:80px 32px;text-align:center;">
+  <h2 style="font-family:var(--font-serif);font-size:36px;color:#fff;margin-bottom:12px;">Порталға кіріңіз</h2>
+  <p style="color:rgba(255,255,255,0.7);font-size:16px;margin-bottom:32px;">Оқушы, мұғалім, ата-ана немесе администратор — сізге арналған интерфейс дайын.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <a href="pages/login.html" class="btn-hero-primary" style="font-size:15px;padding:16px 32px;">Кіру →</a>
+    <a href="pages/kiosk.html" target="_blank" class="btn-hero-outline" style="font-size:15px;padding:16px 32px;">Kiosk экраны 📺</a>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer style="background:var(--dark);color:rgba(255,255,255,0.5);padding:40px 32px;">
+  <div style="max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+    <div>
+      <div style="font-family:var(--font-serif);font-size:16px;color:#fff;margin-bottom:4px;">Ақбөбек Unified Portal</div>
+      <div style="font-size:13px;">© 2025 Лицей «Ақбөбек» · Барлық құқықтар қорғалған</div>
+    </div>
+    <div style="display:flex;gap:24px;">
+      <a href="tel:+77786800636" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;">+7(778) 680 0636</a>
+      <a href="https://a1s.kz" target="_blank" style="color:var(--accent);text-decoration:none;font-size:13px;">a1s.kz →</a>
+    </div>
+  </div>
+</footer>
+
+<script src="json/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Events
+  const eventsGrid = document.getElementById('eventsGrid');
+  LYCEUM_DATA.events.slice(0,3).forEach(ev => {
+    eventsGrid.innerHTML += renderEventCard(ev);
+  });
+
+  // Leaderboard
+  const lbBody = document.getElementById('leaderboardBody');
+  LYCEUM_DATA.leaderboard.slice(0,5).forEach(entry => {
+    lbBody.innerHTML += renderLeaderboardRow(entry);
+  });
+
+  // News
+  const newsGrid = document.getElementById('newsGrid');
+  LYCEUM_DATA.news.slice(0,4).forEach(n => {
+    newsGrid.innerHTML += renderNewsCard(n);
+  });
+
+  // Redirect to portal if already logged in
+  if (Auth.current()) {
+    document.querySelector('[href="pages/login.html"]').href = 'pages/dashboard.html';
+  }
+</script>
+</body>
+</html>

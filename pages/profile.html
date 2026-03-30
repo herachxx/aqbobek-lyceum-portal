@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Профиль — Ақбөбек Portal</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">👤 Профиль</div>
+      <div class="topbar-actions">
+        <div class="avatar" id="topbarAvatar"></div>
+      </div>
+    </div>
+    <div class="page-content">
+      <!-- Profile banner -->
+      <div style="background:linear-gradient(135deg,var(--p2),var(--p1),#7a1a9e);border-radius:var(--radius);padding:40px 32px;margin-bottom:-32px;position:relative;">
+        <div style="display:flex;align-items:flex-end;gap:24px;">
+          <div class="avatar avatar-xl" id="profileAvatar" style="border:4px solid rgba(255,255,255,0.3);font-size:36px;width:80px;height:80px;"></div>
+          <div style="padding-bottom:8px;">
+            <h2 id="profileName" style="color:#fff;margin-bottom:4px;"></h2>
+            <div id="profileSubtitle" style="color:rgba(255,255,255,0.7);font-size:14px;"></div>
+          </div>
+          <div style="margin-left:auto;padding-bottom:8px;" id="profileBadges"></div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div style="margin-top:48px;">
+        <div style="display:flex;gap:4px;background:var(--cream);padding:4px;border-radius:10px;margin-bottom:20px;border:1px solid var(--border)">
+          <button class="login-tab active" onclick="showTab('info',this)">Жалпы ақпарат</button>
+          <button class="login-tab" onclick="showTab('grades',this)">Бағалар</button>
+          <button class="login-tab" onclick="showTab('achievements',this)">Жетістіктер</button>
+          <button class="login-tab" onclick="showTab('goals',this)">Мақсаттар</button>
+        </div>
+
+        <div id="tab-info">
+          <div class="quick-stats" id="profileStats"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+            <div class="card"><h3 style="margin-bottom:16px">Жеке деректер</h3>
+              <div id="infoGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+            <div class="card"><h3 style="margin-bottom:12px">Пән бейіні</h3>
+              <div style="height:200px"><canvas id="profileRadar"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-grades" style="display:none">
+          <div class="card">
+            <h3 style="margin-bottom:16px">Барлық бағалар</h3>
+            <div class="table-wrap" id="profileGradesTable"></div>
+          </div>
+        </div>
+
+        <div id="tab-achievements" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="profileAchs"></div>
+        </div>
+
+        <div id="tab-goals" style="display:none">
+          <div class="card">
+            <div class="section-header">
+              <h3>Менің мақсаттарым</h3>
+              <button class="btn btn-primary btn-sm" onclick="addGoal()">+ Мақсат қосу</button>
+            </div>
+            <div id="goalsContainer" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../json/data.js"></script>
+<script src="../js/app.js"></script>
+<script>
+const user = Auth.require();
+buildSidebar('profile', user.role);
+
+const student = LYCEUM_DATA.students.find(s => s.id === user.id) || LYCEUM_DATA.students[0];
+const avgs = student?.bilimClass ? subjectAvg(student.bilimClass) : {};
+const overall = student?.bilimClass ? overallAvg(student.bilimClass) : '--';
+
+document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+document.getElementById('profileAvatar').textContent = initials(user.fullname || user.login);
+document.getElementById('profileName').textContent = user.fullname || user.login;
+document.getElementById('profileSubtitle').textContent = `${student?.grade || ''} · ${roleLabel(user.role)}`;
+document.getElementById('profileBadges').innerHTML = `
+  <span class="badge badge-purple" style="font-size:13px;padding:6px 14px">GPA ${overall}</span>
+  <span class="badge badge-gold" style="font-size:13px;padding:6px 14px;margin-left:8px">#${student?.rank || '—'} рейтинг</span>
+`;
+
+// Stats
+document.getElementById('profileStats').innerHTML = `
+  <div class="stat-card"><div class="stat-icon purple">📊</div><div><div class="stat-num">${overall}</div><div class="stat-label">Орта балл</div></div></div>
+  <div class="stat-card"><div class="stat-icon gold">🏆</div><div><div class="stat-num">${student?.achievements?.length||0}</div><div class="stat-label">Жетістік</div></div></div>
+  <div class="stat-card"><div class="stat-icon green">🎯</div><div><div class="stat-num">${student?.goals?.length||0}</div><div class="stat-label">Мақсат</div></div></div>
+  <div class="stat-card"><div class="stat-icon blue">📅</div><div><div class="stat-num">${student?.events?.length||0}</div><div class="stat-label">Іс-шара</div></div></div>
+`;
+
+// Info
+document.getElementById('infoGrid').innerHTML = [
+  ['Аты-жөні', user.fullname],
+  ['Логин', '@' + user.login],
+  ['Сынып', student?.grade || '—'],
+  ['Рейтинг', `#${student?.rank || '—'}`],
+  ['Тәуекел деңгейі', `<span class="risk-${student?.riskLevel}">${riskLabel(student?.riskLevel)}</span>`],
+].map(([k, v]) => `
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+    <span style="font-size:13px;color:var(--gray)">${k}</span>
+    <span style="font-size:13px;font-weight:600">${v}</span>
+  </div>
+`).join('');
+
+// Radar
+setTimeout(() => {
+  if (Object.keys(avgs).length) radarChart(document.getElementById('profileRadar'), Object.keys(avgs), Object.values(avgs));
+}, 50);
+
+// Grades tab
+const gt = document.getElementById('profileGradesTable');
+if (student?.bilimClass) {
+  gt.innerHTML = `<table><thead><tr><th>Пән</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>Орта</th></tr></thead><tbody>
+    ${Object.entries(student.bilimClass).map(([sub,gs])=>`
+      <tr><td><strong>${sub}</strong></td>${gs.map(g=>`<td><div class="grade-cell ${gradeColor(g)}">${g}</div></td>`).join('')}
+      ${'<td></td>'.repeat(7-gs.length)}<td><strong>${avgs[sub]}</strong></td></tr>
+    `).join('')}
+  </tbody></table>`;
+}
+
+// Achievements tab
+const achDiv = document.getElementById('profileAchs');
+(student?.achievements||[]).forEach(a => {
+  achDiv.innerHTML += `<div class="ach-badge-card card"><div class="ach-emoji">${a.icon}</div><div class="ach-info"><strong>${a.title}</strong><span>${a.place}-орын · ${a.year}</span></div></div>`;
+});
+if (!student?.achievements?.length) achDiv.innerHTML = '<div class="text-gray" style="grid-column:span 2;text-align:center;padding:40px">Жетістіктер жоқ</div>';
+
+// Goals
+const goals = [...(student?.goals || [])];
+function renderGoals() {
+  const c = document.getElementById('goalsContainer');
+  c.innerHTML = goals.map((g, i) => `
+    <div class="goal-item">
+      <div class="goal-icon">🎯</div>
+      <div class="goal-text">${g}</div>
+      <button class="btn btn-ghost btn-sm" onclick="removeGoal(${i})">✕</button>
+    </div>
+  `).join('') || '<div class="text-gray text-sm text-center" style="padding:20px">Мақсат қосылмаған. "+" батырмасын басыңыз</div>';
+}
+renderGoals();
+
+function addGoal() {
+  const g = prompt('Жаңа мақсат енгізіңіз:');
+  if (g?.trim()) { goals.push(g.trim()); renderGoals(); toast('Мақсат қосылды ✓', 'success'); }
+}
+function removeGoal(i) { goals.splice(i, 1); renderGoals(); }
+
+// Tabs
+function showTab(id, btn) {
+  ['info','grades','achievements','goals'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===id ? 'block' : 'none';
+  });
+  document.querySelectorAll('.login-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
