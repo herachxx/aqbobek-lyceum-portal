@@ -37,22 +37,22 @@ c<div align="right"><a href="#-read-this-document-in-your-language">⬆ Back to 
 
 **Aqbobek Unified Portal** is a role-based web application that centralises academic life for students, teachers, parents, and administrators in a single platform. It integrates grade tracking (BilimClass), an AI-powered study mentor (Claude API), a school kiosk display, achievement badges, event management, and a live student leaderboard - all delivered as a pure front-end solution with zero installation required.
 
-## ✨ Features
+## Features
 
 | Module | Description |
 |:---|:---|
-| 📊 **Dashboard** | Personalised home screen that adapts to each user role |
-| 📝 **Grades (BilimClass)** | Subject-level grade cards with trend lines, radar charts, and average GPA |
-| 🤖 **AI Mentor** | Claude-powered advisor that analyses performance, suggests careers, and builds personalised study plans |
-| 🏆 **Achievements** | Badge system tracking academic milestones and extracurricular wins |
-| ⚠️ **Risk Zone** | Auto-flags underperforming students for teacher review with in-app notifications |
-| 🥇 **Rankings** | Podium-style leaderboard displaying top students |
-| 📅 **Events** | School event calendar with registration support |
-| 👤 **Profile** | Personal page with role-specific data |
-| 🖥️ **Kiosk Mode** | Full-screen hallway display with auto-rotating news, live clock, and leaderboard ticker |
-| 📋 **Teacher Grades** | Class-wide grade management panel for teachers |
+| **Dashboard** | Personalised home screen that adapts to each user role |
+| **Grades (BilimClass)** | Subject-level grade cards with trend lines, radar charts, and average GPA |
+| **AI Mentor** | Claude-powered advisor that analyses performance, suggests careers, and builds personalised study plans |
+| **Achievements** | Badge system tracking academic milestones and extracurricular wins |
+| **Risk Zone** | Auto-flags underperforming students for teacher review with in-app notifications |
+| **Rankings** | Podium-style leaderboard displaying top students |
+| **Events** | School event calendar with registration support |
+| **Profile** | Personal page with role-specific data |
+| **Kiosk Mode** | Full-screen hallway display with auto-rotating news, live clock, and leaderboard ticker |
+| **Teacher Grades** | Class-wide grade management panel for teachers |
 
-## 🚀 Quick Start
+## Quick Start
 
 No build step needed. Open the project in any browser:
 
@@ -73,19 +73,19 @@ python -m http.server 8080
 > Opening via `file:///` may trigger CORS restrictions when loading data.
 > A local server (Live Server or `npx serve`) is strongly recommended.
 
-## 🔐 Demo Accounts
+## Demo Accounts
 
 | Role | Login | Password |
 |:---|:---|:---|
-| 👩‍🎓 Student (Aizat) | `aizat.bekova` | `pass123` |
-| 👨‍🎓 Student (Hasan) | `hasan.nurmagambetov` | `hasan123` |
-| 👨‍🎓 Student (Nurasyl) | `nurasyl.dzhaksybekov` | `pass456` |
-| 👩‍🎓 Student (Aruzhan) | `aruzhan.seitova` | `pass789` |
-| 👨‍🏫 Teacher | `teacher1` | `teacher123` |
-| 👨‍👩‍👦 Parent | `parent1` | `parent123` |
-| 🛡️ Administrator | `admin` | `admin123` |
+| Student (Aizat) | `aizat.bekova` | `pass123` |
+| Student (Hasan) | `adema.tilishbaeva` | `adema123` |
+| Student (Nurasyl) | `nurasyl.dzhaksybekov` | `pass456` |
+| Student (Aruzhan) | `aruzhan.seitova` | `pass789` |
+| Teacher | `teacher1` | `teacher123` |
+| Parent | `parent1` | `parent123` |
+| Administrator | `admin` | `admin123` |
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 project/
@@ -144,22 +144,22 @@ project/
 
 **Ақбөбек Unified Portal** - ролевое веб-приложение, которое собирает всю академическую жизнь школы в одном месте. Платформа объединяет учеников, учителей, родителей и администраторов: отслеживание оценок (BilimClass), персональный AI-ментор (Claude API), школьный киоск-дисплей, система достижений, управление мероприятиями и рейтинг учеников. Всё работает на стороне клиента - установка не требуется.
 
-## ✨ Функциональность
+## Функциональность
 
 | Модуль | Описание |
 |:---|:---|
-| 📊 **Дашборд** | Персонализированная главная страница, адаптирующаяся к роли пользователя |
-| 📝 **Оценки (BilimClass)** | Карточки оценок по предметам с графиком тренда, радарной диаграммой и средним GPA |
-| 🤖 **AI Ментор** | Claude-советник: анализирует успеваемость, предлагает карьерные пути и составляет персональный план |
-| 🏆 **Достижения** | Система бейджей - академические и внеклассные успехи |
-| ⚠️ **Зона риска** | Автоматически выявляет слабоуспевающих учеников; поддерживает уведомления |
-| 🥇 **Рейтинг** | Пьедестальная таблица лучших учеников |
-| 📅 **Мероприятия** | Школьный календарь событий с поддержкой регистрации |
-| 👤 **Профиль** | Личная страница с данными, специфичными для роли |
-| 🖥️ **Режим киоска** | Полноэкранный дисплей для коридора: авторотация новостей, часы, бегущая строка рейтинга |
-| 📋 **Оценки учителя** | Панель управления оценками класса для учителей |
+| **Дашборд** | Персонализированная главная страница, адаптирующаяся к роли пользователя |
+| **Оценки (BilimClass)** | Карточки оценок по предметам с графиком тренда, радарной диаграммой и средним GPA |
+| **AI Ментор** | Claude-советник: анализирует успеваемость, предлагает карьерные пути и составляет персональный план |
+| **Достижения** | Система бейджей - академические и внеклассные успехи |
+| **Зона риска** | Автоматически выявляет слабоуспевающих учеников; поддерживает уведомления |
+| **Рейтинг** | Пьедестальная таблица лучших учеников |
+| **Мероприятия** | Школьный календарь событий с поддержкой регистрации |
+| **Профиль** | Личная страница с данными, специфичными для роли |
+| **Режим киоска** | Полноэкранный дисплей для коридора: авторотация новостей, часы, бегущая строка рейтинга |
+| **Оценки учителя** | Панель управления оценками класса для учителей |
 
-## 🚀 Быстрый старт
+## Быстрый старт
 
 Сборка не требуется. Просто откройте проект в браузере:
 
@@ -180,19 +180,19 @@ python -m http.server 8080
 > При открытии через `file:///` возможны CORS-ограничения.
 > Рекомендуется использовать Live Server или `npx serve`.
 
-## 🔐 Демо-аккаунты
+## Демо-аккаунты
 
 | Роль | Логин | Пароль |
 |:---|:---|:---|
-| 👩‍🎓 Ученик (Айзат) | `aizat.bekova` | `pass123` |
-| 👨‍🎓 Ученик (Хасан) | `hasan.nurmagambetov` | `hasan123` |
-| 👨‍🎓 Ученик (Нурасыл) | `nurasyl.dzhaksybekov` | `pass456` |
-| 👩‍🎓 Ученик (Аружан) | `aruzhan.seitova` | `pass789` |
-| 👨‍🏫 Учитель | `teacher1` | `teacher123` |
-| 👨‍👩‍👦 Родитель | `parent1` | `parent123` |
-| 🛡️ Администратор | `admin` | `admin123` |
+| Ученик (Айзат) | `aizat.bekova` | `pass123` |
+| Ученик (Адема) | `adema.tilishbaeva` | `adema123` |
+| Ученик (Нурасыл) | `nurasyl.dzhaksybekov` | `pass456` |
+| Ученик (Аружан) | `aruzhan.seitova` | `pass789` |
+| Учитель | `teacher1` | `teacher123` |
+| Родитель | `parent1` | `parent123` |
+| Администратор | `admin` | `admin123` |
 
-## 📁 Структура проекта
+## Структура проекта
 
 ```
 project/
@@ -251,22 +251,22 @@ project/
 
 **Ақбөбек Unified Portal** - мектептің академиялық өмірін бір платформада шоғырландыратын рөлдік веб-қосымша. Жүйе оқушылар, мұғалімдер, ата-аналар және әкімшілерді біріктіреді: BilimClass арқылы бағаларды бақылау, Claude API негізіндегі AI ментор, мектеп дәліз дисплейі, жетістіктер жүйесі, іс-шараларды басқару және тікелей оқушылар рейтингі. Қосымша толығымен клиент жағында жұмыс істейді - орнату қажет емес.
 
-## ✨ Мүмкіндіктер
+## Мүмкіндіктер
 
 | Модуль | Сипаттама |
 |:---|:---|
-| 📊 **Бақылау тақтасы** | Пайдаланушы рөліне бейімделетін жеке бас бет |
-| 📝 **Бағалар (BilimClass)** | Пән бойынша бағалар картасы, үрдіс диаграммасы, радар-chart және орта GPA |
-| 🤖 **AI Ментор** | Claude кеңесші: үлгерімді талдайды, мансаптық бағыт ұсынады, дайындық жоспарын жасайды |
-| 🏆 **Жетістіктер** | Академиялық және сыныптан тыс жетістіктерді тіркейтін бейдж жүйесі |
-| ⚠️ **Тәуекел аймағы** | Үлгерімі төмен оқушыларды автоматты анықтайды; хабарламаларды қолдайды |
-| 🥇 **Рейтинг** | Үздік оқушыларды пьедестал форматында көрсететін кесте |
-| 📅 **Іс-шаралар** | Тіркелу мүмкіндігі бар мектеп іс-шаралары күнтізбесі |
-| 👤 **Профиль** | Рөлге тән деректері бар жеке бет |
-| 🖥️ **Kiosk режимі** | Дәліз үшін толық экранды дисплей: жаңалықтар айналымы, тікелей сағат, рейтинг жолаушысы |
-| 📋 **Мұғалім бағалары** | Мұғалімдер үшін сынып бағаларын басқару панелі |
+| **Бақылау тақтасы** | Пайдаланушы рөліне бейімделетін жеке бас бет |
+| **Бағалар (BilimClass)** | Пән бойынша бағалар картасы, үрдіс диаграммасы, радар-chart және орта GPA |
+| **AI Ментор** | Claude кеңесші: үлгерімді талдайды, мансаптық бағыт ұсынады, дайындық жоспарын жасайды |
+| **Жетістіктер** | Академиялық және сыныптан тыс жетістіктерді тіркейтін бейдж жүйесі |
+| **Тәуекел аймағы** | Үлгерімі төмен оқушыларды автоматты анықтайды; хабарламаларды қолдайды |
+| **Рейтинг** | Үздік оқушыларды пьедестал форматында көрсететін кесте |
+| **Іс-шаралар** | Тіркелу мүмкіндігі бар мектеп іс-шаралары күнтізбесі |
+| **Профиль** | Рөлге тән деректері бар жеке бет |
+| **Kiosk режимі** | Дәліз үшін толық экранды дисплей: жаңалықтар айналымы, тікелей сағат, рейтинг жолаушысы |
+| **Мұғалім бағалары** | Мұғалімдер үшін сынып бағаларын басқару панелі |
 
-## 🚀 Жылдам іске қосу
+## Жылдам іске қосу
 
 Жинау қадамы қажет емес. Жобаны кез-келген браузерде ашыңыз:
 
@@ -287,19 +287,19 @@ python -m http.server 8080
 > `file:///` арқылы ашқанда деректерді жүктеу кезінде CORS шектеулері болуы мүмкін.
 > Live Server немесе `npx serve` пайдалану ұсынылады.
 
-## 🔐 Demo аккаунттар
+## Demo аккаунттар
 
 | Рөл | Логин | Пароль |
 |:---|:---|:---|
-| 👩‍🎓 Оқушы (Айзат) | `aizat.bekova` | `pass123` |
-| 👨‍🎓 Оқушы (Адема) | `adema.tilishbaeva` | `adema123` |
-| 👨‍🎓 Оқушы (Нурасыл) | `nurasyl.dzhaksybekov` | `pass456` |
-| 👩‍🎓 Оқушы (Аружан) | `aruzhan.seitova` | `pass789` |
-| 👨‍🏫 Мұғалім | `teacher1` | `teacher123` |
-| 👨‍👩‍👦 Ата-ана | `parent1` | `parent123` |
-| 🛡️ Администратор | `admin` | `admin123` |
+| Оқушы (Айзат) | `aizat.bekova` | `pass123` |
+| Оқушы (Адема) | `adema.tilishbaeva` | `adema123` |
+| Оқушы (Нурасыл) | `nurasyl.dzhaksybekov` | `pass456` |
+| Оқушы (Аружан) | `aruzhan.seitova` | `pass789` |
+| Мұғалім | `teacher1` | `teacher123` |
+| Ата-ана | `parent1` | `parent123` |
+| Администратор | `admin` | `admin123` |
 
-## 📁 Жоба құрылымы
+## Жоба құрылымы
 
 ```
 project/
