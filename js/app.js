@@ -2,7 +2,28 @@
    AQBOBEK UNIFIED PORTAL — Core Application Logic
    ═══════════════════════════════════════════════════ */
 
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    // Загружаем данные перед любыми вызовами
+    await initData();
+    console.log('✅ LYCEUM_DATA загружена');
+
+    // Проверяем текущего пользователя и строим сайдбар
+    const user = Auth.current();
+    if (user && document.getElementById('sidebar-placeholder')) {
+  buildSidebar('dashboard', user.role);
+}
+
+    // Любые другие инициализации зависят от LYCEUM_DATA
+    // Например, можно сразу рендерить новости, события, рейтинг и т.д.
+  } catch (err) {
+    console.error('Ошибка при загрузке данных:', err);
+    toast('Данные не удалось загрузить. Попробуйте позже.', 'error');
+  }
+});
+
 // ─── AUTH ─────────────────────────────────────────────
+
 const Auth = {
   current() {
     try { return JSON.parse(sessionStorage.getItem('aqbobek_user')); } catch { return null; }
@@ -63,55 +84,45 @@ function gradeColor(score) {
   if (score >= 60) return 'grade-c';
   return 'grade-d';
 }
-
 function gradeLabel(score) {
   if (score >= 90) return '5';
   if (score >= 75) return '4';
   if (score >= 60) return '3';
   return '2';
 }
-
 function avg(arr) {
   if (!arr || arr.length === 0) return 0;
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
-
 function subjectAvg(grades) {
   return Object.fromEntries(
     Object.entries(grades).map(([s, g]) => [s, Math.round(avg(g))])
   );
 }
-
 function overallAvg(grades) {
   const avgs = Object.values(grades).map(g => avg(g));
   return avg(avgs).toFixed(1);
 }
-
 function formatDate(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('kk-KZ', { year: 'numeric', month: 'long', day: 'numeric' });
 }
-
 function formatDateRu(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
 }
-
 function initials(name) {
   return name.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
 }
-
 function riskBadge(level) {
   const map = { low: ['badge-green', '✓ Норма'], medium: ['badge-gold', '⚠ Орта'], high: ['badge-red', '🔴 Тәуекел'] };
   const [cls, label] = map[level] || ['badge-gray', '—'];
   return `<span class="badge ${cls}">${label}</span>`;
 }
-
 function riskLabel(level) {
   const map = { low: 'Норма', medium: 'Орта', high: 'Тәуекел' };
   return map[level] || '—';
 }
-
 function trendArrow(arr) {
   if (arr.length < 2) return '';
   const diff = arr[arr.length - 1] - arr[arr.length - 2];
@@ -127,39 +138,41 @@ function buildSidebar(activeId, role) {
 
   const menus = {
     student: [
-      { id: 'dashboard',     icon: '🏠', label: 'Негізгі бет',     href: 'dashboard.html' },
-      { id: 'grades',        icon: '📊', label: 'Бағалар',          href: 'grades.html' },
-      { id: 'achievements',  icon: '🏆', label: 'Жетістіктер',      href: 'achievements.html' },
-      { id: 'events',        icon: '📅', label: 'Іс-шаралар',       href: 'events.html' },
-      { id: 'ai',            icon: '🤖', label: 'AI Ментор',        href: 'ai-mentor.html' },
-      { id: 'ranking',       icon: '🥇', label: 'Рейтинг',          href: 'ranking.html' },
-      { id: 'profile',       icon: '👤', label: 'Профиль',           href: 'profile.html' },
-      { id: 'kiosk',         icon: '📺', label: 'Кiosk режимі',     href: 'kiosk.html' },
+      { id: 'dashboard', icon: '🏠', label: 'Негізгі бет', href: 'dashboard.html' },
+      { id: 'schedule', icon: '🗓️', label: 'Расписание', href: 'schedule_watcher.html' },
+      { id: 'grades', icon: '📊', label: 'Бағалар', href: 'grades.html' },
+      { id: 'achievements', icon: '🏆', label: 'Жетістіктер', href: 'achievements.html' },
+      { id: 'events', icon: '📅', label: 'Іс-шаралар', href: 'events.html' },
+      { id: 'ai', icon: '🤖', label: 'AI Ментор', href: 'ai-mentor.html' },
+      { id: 'ranking', icon: '🥇', label: 'Рейтинг', href: 'ranking.html' },
+      { id: 'profile', icon: '👤', label: 'Профиль', href: 'profile.html' },
+      { id: 'kiosk', icon: '📺', label: 'Kiosk режимі', href: 'kiosk.html' },
     ],
     teacher: [
-      { id: 'dashboard',     icon: '🏠', label: 'Негізгі бет',     href: 'dashboard.html' },
-      { id: 'grades',        icon: '📊', label: 'Бағалар (сынып)', href: 'teacher-grades.html' },
-      { id: 'schedule',      icon: '🗓️', label: 'Расписание',       href: 'schedule.html' },
-      { id: 'achievements',  icon: '🏆', label: 'Жетістіктер',      href: 'achievements.html' },
-      { id: 'events',        icon: '📅', label: 'Іс-шаралар',       href: 'events.html' },
-      { id: 'risk',          icon: '⚠️',  label: 'Тәуекел аймағы',  href: 'risk-zone.html' },
-      { id: 'ranking',       icon: '🥇', label: 'Рейтинг',          href: 'ranking.html' },
-      { id: 'kiosk',         icon: '📺', label: 'Кiosk режимі',     href: 'kiosk.html' },
+      { id: 'dashboard', icon: '🏠', label: 'Негізгі бет', href: 'dashboard.html' },
+      { id: 'grades', icon: '📊', label: 'Бағалар (сынып)', href: 'teacher-grades.html' },
+      { id: 'schedule', icon: '🗓️', label: 'Расписание', href: 'schedule.html' },
+      { id: 'achievements', icon: '🏆', label: 'Жетістіктер', href: 'achievements.html' },
+      { id: 'events', icon: '📅', label: 'Іс-шаралар', href: 'events.html' },
+      { id: 'risk', icon: '⚠️', label: 'Тәуекел аймағы', href: 'risk-zone.html' },
+      { id: 'ranking', icon: '🥇', label: 'Рейтинг', href: 'ranking.html' },
+      { id: 'kiosk', icon: '📺', label: 'Kiosk режимі', href: 'kiosk.html' },
     ],
     parent: [
-      { id: 'dashboard',     icon: '🏠', label: 'Негізгі бет',     href: 'dashboard.html' },
-      { id: 'grades',        icon: '📊', label: 'Баланың бағалары', href: 'grades.html' },
-      { id: 'achievements',  icon: '🏆', label: 'Жетістіктер',      href: 'achievements.html' },
-      { id: 'events',        icon: '📅', label: 'Іс-шаралар',       href: 'events.html' },
-      { id: 'ranking',       icon: '🥇', label: 'Рейтинг',          href: 'ranking.html' },
+      { id: 'dashboard', icon: '🏠', label: 'Негізгі бет', href: 'dashboard.html' },
+      { id: 'schedule', icon: '🗓️', label: 'Расписание', href: 'schedule_watcher.html' },
+      { id: 'grades', icon: '📊', label: 'Баланың бағалары', href: 'grades.html' },
+      { id: 'achievements', icon: '🏆', label: 'Жетістіктер', href: 'achievements.html' },
+      { id: 'events', icon: '📅', label: 'Іс-шаралар', href: 'events.html' },
+      { id: 'ranking', icon: '🥇', label: 'Рейтинг', href: 'ranking.html' },
     ],
     admin: [
-      { id: 'dashboard',     icon: '🏠', label: 'Негізгі бет',     href: 'dashboard.html' },
-      { id: 'schedule',      icon: '🗓️', label: 'Расписание',       href: 'schedule.html' },
-      { id: 'events',        icon: '📅', label: 'Іс-шаралар',       href: 'events.html' },
-      { id: 'ranking',       icon: '🥇', label: 'Жалпы рейтинг',   href: 'ranking.html' },
-      { id: 'risk',          icon: '⚠️',  label: 'Тәуекел аймағы',  href: 'risk-zone.html' },
-      { id: 'kiosk',         icon: '📺', label: 'Кiosk режимі',     href: 'kiosk.html' },
+      { id: 'dashboard', icon: '🏠', label: 'Негізгі бет', href: 'dashboard.html' },
+      { id: 'schedule', icon: '🗓️', label: 'Расписание', href: 'schedule.html' },
+      { id: 'events', icon: '📅', label: 'Іс-шаралар', href: 'events.html' },
+      { id: 'ranking', icon: '🥇', label: 'Жалпы рейтинг', href: 'ranking.html' },
+      { id: 'risk', icon: '⚠️', label: 'Тәуекел аймағы', href: 'risk-zone.html' },
+      { id: 'kiosk', icon: '📺', label: 'Kiosk режимі', href: 'kiosk.html' },
     ],
   };
 
@@ -210,7 +223,6 @@ function roleLabel(role) {
   return map[role] || role;
 }
 
-// ─── MINI SIDEBAR TOGGLE (mobile) ────────────────────
 function toggleSidebar() {
   document.getElementById('appSidebar')?.classList.toggle('open');
 }
@@ -313,7 +325,7 @@ function barChart(container, labels, data, color = '#59007A') {
 }
 
 // ─── AI MENTOR ────────────────────────────────────────
-const AIMentor = {
+window.AIMentor = window.AIMentor || {
   apiKey: null, // handled by proxy
 
   greetings: [
