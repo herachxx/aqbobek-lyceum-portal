@@ -168,6 +168,7 @@ function buildSidebar(activeId, role) {
     teacher: [
       { id: 'dashboard', icon: ICONS.home, label: 'Негізгі бет', href: 'dashboard.html' },
       { id: 'grades', icon: ICONS.barChart, label: 'Бағалар (сынып)', href: 'teacher-grades.html' },
+      { id: 'rate student', icon: '🗓️', label: 'Оценивание', href: 'rating.html' },
       { id: 'schedule', icon: ICONS.calendar, label: 'Расписание', href: 'schedule.html' },
       { id: 'achievements', icon: ICONS.trophy, label: 'Жетістіктер', href: 'achievements.html' },
       { id: 'events', icon: ICONS.calendar, label: 'Іс-шаралар', href: 'events.html' },
@@ -186,6 +187,7 @@ function buildSidebar(activeId, role) {
     admin: [
       { id: 'dashboard', icon: ICONS.home, label: 'Негізгі бет', href: 'dashboard.html' },
       { id: 'schedule', icon: ICONS.calendar, label: 'Расписание', href: 'schedule.html' },
+      { id: 'rate student', icon: '🗓️', label: 'Оценивание', href: 'rating.html' },
       { id: 'events', icon: ICONS.calendar, label: 'Іс-шаралар', href: 'events.html' },
       { id: 'ranking', icon: ICONS.medal, label: 'Жалпы рейтинг', href: 'ranking.html' },
       { id: 'risk', icon: ICONS.alertTriangle, label: 'Тәуекел аймағы', href: 'risk-zone.html' },
