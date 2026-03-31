@@ -13,7 +13,6 @@
 [![Claude AI](https://img.shields.io/badge/Claude_API-D97757?style=for-the-badge&logo=anthropic&logoColor=white)](https://www.anthropic.com/)
 
 [![Status](https://img.shields.io/badge/Status-Hackathon_Project-blueviolet?style=flat-square)]()
-[![No Install](https://img.shields.io/badge/No_Install-Open_in_Browser-brightgreen?style=flat-square)]()
 [![Roles](https://img.shields.io/badge/Roles-Student_%7C_Teacher_%7C_Parent_%7C_Admin-blue?style=flat-square)]()
 [![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)]()
 
