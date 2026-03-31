@@ -1,69 +1,185 @@
 <!DOCTYPE html>
-<html lang="kk">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Сынып бағалары — Ақбөбек Portal</title>
+  <title>Расписание — Ақбөбек Portal</title>
   <link rel="stylesheet" href="../css/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ── Schedule-specific styles ── */
+    .schedule-card {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .schedule-head {
+      display: flex; align-items: center; gap: 14px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, var(--p1), var(--p3));
+    }
+    .schedule-head h2 { font-size: 15px; font-weight: 700; color: #fff; }
+    .stag {
+      padding: 3px 10px; border-radius: 999px; font-size: 11px;
+      font-weight: 700; letter-spacing: .04em;
+    }
+    .stag-blue   { background: rgba(255,255,255,.18); color: #fff; }
+    .stag-purple { background: rgba(255,255,255,.12); color: rgba(255,255,255,.85); }
+
+    .lessons-grid { display: flex; flex-direction: column; }
+    .lesson-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 110px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+    .lesson-row:last-child { border-bottom: none; }
+    .lesson-row:hover { background: rgba(124,58,237,.04); }
+
+    .lesson-num {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; width: 52px;
+      font-size: 12px; font-weight: 700; color: var(--gray);
+      border-right: 1px solid var(--border);
+      background: rgba(0,0,0,.02);
+    }
+    .lesson-num span {
+      width: 26px; height: 26px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--border); font-size: 11px;
+    }
+    .lesson-input-wrap { padding: 10px 16px; }
+    .lesson-input {
+      width: 100%; background: transparent; border: none;
+      font-family: var(--font); font-size: 14px; color: var(--dark);
+      padding: 6px 0; outline: none;
+      border-bottom: 1.5px solid transparent; transition: border-color .2s;
+    }
+    .lesson-input:focus { border-bottom-color: var(--p1); }
+    .lesson-input::placeholder { color: var(--gray); font-style: italic; }
+    .lesson-time {
+      padding: 0 12px; font-size: 11px; color: var(--gray);
+      white-space: nowrap; font-family: monospace;
+    }
+
+    .bottom-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-top: 16px; flex-wrap: wrap; gap: 10px;
+    }
+    .change-count { font-size: 12px; color: var(--gray); }
+    .change-count strong { color: var(--p1); }
+
+    .schedule-wrapper { position: relative; }
+    .loading-overlay {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,.7);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius); z-index: 10;
+      pointer-events: none; opacity: 0; transition: opacity .25s;
+    }
+    .loading-overlay.visible { opacity: 1; pointer-events: all; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border); border-top-color: var(--p1);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .webhook-row {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      padding: 14px 18px;
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 20px;
+    }
+    .webhook-row label { font-size: 12px; font-weight: 700; color: var(--gray); white-space: nowrap; }
+    .webhook-row input {
+      flex: 1; min-width: 260px; padding: 8px 12px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-family: var(--font); font-size: 13px; outline: none;
+    }
+    .webhook-row input:focus { border-color: var(--p1); }
+  </style>
 </head>
 <body>
 <div class="app-layout">
   <div id="sidebar-placeholder"></div>
   <div class="main-content">
     <div class="topbar">
-      <div class="topbar-title">📊 Сынып бағалары</div>
+      <div class="topbar-title">📅 Расписание уроков</div>
       <div class="topbar-actions">
         <div class="avatar" id="topbarAvatar"></div>
       </div>
     </div>
+
     <div class="page-content">
 
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;padding:14px 18px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:var(--radius);border:1px solid #93c5fd;">
-        <span style="font-size:20px">🔗</span>
-        <div>
-          <div style="font-weight:700;font-size:14px;color:#1e40af">BilimClass — Мұғалім панелі</div>
-          <div style="font-size:12px;color:#3b82f6">Барлық сынып оқушыларының бағалары · Тәуекел мониторингі</div>
-        </div>
-        <select id="subjectFilter" style="margin-left:auto;border:1px solid #93c5fd;border-radius:6px;padding:6px 10px;font-family:var(--font);font-size:13px;background:#fff;" onchange="renderTable()">
-          <option value="all">Барлық пәндер</option>
-        </select>
+      <!-- Webhook config (скрыт если не нужен) -->
+      <div class="webhook-row" id="webhookRow">
+        <label>🔗 Webhook URL</label>
+        <input type="text" id="webhookUrl"
+          placeholder="https://asicapital.asia/webhook/bcc9850d-887b-42fe-8ce0-1b647f3866fc">
+        <button class="btn btn-outline btn-sm" onclick="saveWebhook()">💾 Сохранить</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('webhookRow').style.display='none'">✕</button>
       </div>
 
-      <div class="quick-stats" id="classStats"></div>
-
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-top:20px;">
-        <div class="card">
-          <div class="section-header">
-            <h3>Оқушылар үлгерімі</h3>
-            <input id="searchInput" placeholder="Іздеу..." class="btn btn-ghost btn-sm" style="border:1px solid var(--border);padding:6px 12px;border-radius:6px;font-family:var(--font)" oninput="renderTable()">
+      <!-- Controls -->
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;">Класс</label>
+            <select id="classSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;outline:none;cursor:pointer;min-width:140px;">
+              <option value="">— выберите —</option>
+              <option value="7a">7А</option><option value="7b">7Б</option><option value="7c">7В</option>
+              <option value="8a">8А</option><option value="8b">8Б</option><option value="8c">8В</option><option value="8d">8Г</option>
+              <option value="9a">9А</option><option value="9b">9Б</option>
+              <option value="10a">10А</option><option value="10b">10Б</option>
+              <option value="11a">11А</option><option value="11b">11Б</option>
+            </select>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Оқушы</th>
-                  <th>Сынып</th>
-                  <th id="subjectHeader">Пән орта</th>
-                  <th>GPA</th>
-                  <th>Тәуекел</th>
-                  <th>Үрдіс</th>
-                </tr>
-              </thead>
-              <tbody id="classBody"></tbody>
-            </table>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;">День недели</label>
+            <select id="daySelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;outline:none;cursor:pointer;min-width:160px;">
+              <option value="">— выберите —</option>
+              <option value="monday">Понедельник</option>
+              <option value="tuesday">Вторник</option>
+              <option value="wednesday">Среда</option>
+              <option value="thursday">Четверг</option>
+              <option value="friday">Пятница</option>
+              <option value="saturday">Суббота</option>
+            </select>
           </div>
+          <button class="btn btn-primary" onclick="loadSchedule()">⬇ Загрузить</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto;"
+            onclick="document.getElementById('webhookRow').style.display='flex'"
+            title="Настроить webhook">⚙</button>
         </div>
+      </div>
 
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          <div class="card">
-            <h3 style="margin-bottom:12px">Сынып пәндер орта баллы</h3>
-            <div style="height:220px"><canvas id="classSubjectsChart"></canvas></div>
+      <!-- Schedule card -->
+      <div class="schedule-wrapper">
+        <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+
+        <div class="schedule-card" id="scheduleCard" style="display:none;">
+          <div class="schedule-head">
+            <span style="font-size:20px;">📋</span>
+            <h2>Расписание уроков</h2>
+            <span class="stag stag-blue" id="tagClass">—</span>
+            <span class="stag stag-purple" id="tagDay">—</span>
           </div>
-          <div class="card">
-            <h3 style="margin-bottom:12px">Тәуекел бөлуі</h3>
-            <div style="height:150px"><canvas id="riskChart"></canvas></div>
-          </div>
+          <div class="lessons-grid" id="lessonsGrid"></div>
+        </div>
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="bottom-bar" id="bottomBar" style="display:none;">
+        <div class="change-count" id="changeCount">Изменений: <strong>0</strong></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="resetChanges()">↩ Сбросить</button>
+          <button class="btn btn-primary" onclick="saveSchedule()">✓ Сохранить в БД</button>
         </div>
       </div>
 
@@ -72,79 +188,174 @@
 </div>
 
 <div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
 <script src="../json/data.js"></script>
 <script src="../js/app.js"></script>
 <script>
+// Auth
 const user = Auth.require(['teacher','admin']);
-buildSidebar('grades', user.role);
+buildSidebar('schedule', user.role);
 document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
 
-const students = LYCEUM_DATA.students;
-const subjects = LYCEUM_DATA.subjects;
+// Hide webhook bar by default
+document.getElementById('webhookRow').style.display = 'none';
 
-// Populate subject filter
-const sf = document.getElementById('subjectFilter');
-subjects.forEach(s => { sf.innerHTML += `<option value="${s}">${s}</option>`; });
+// ── STATE ──────────────────────────────────────────────────
+const LESSON_TIMES = [
+  '08:00–08:45','08:55–09:40','09:50–10:35',
+  '10:55–11:40','11:50–12:35','12:45–13:30',
+  '13:40–14:25','14:35–15:20','15:30–16:15','16:25–17:10'
+];
+const FIELD_KEYS = [
+  'first_subject','second_subject','third_subject','fourth_subject',
+  'fifth_subject','sixth_subject','seventh_subject','eigthth_subject',
+  'nineth_subject','tenth_subject'
+];
+const DEFAULT_WEBHOOK = 'https://asicapital.asia/webhook/bcc9850d-887b-42fe-8ce0-1b647f3866fc';
 
-// Stats
-const classGpas = students.map(s => s.bilimClass ? parseFloat(overallAvg(s.bilimClass)) : 0);
-const classAvgGpa = (classGpas.reduce((a,b)=>a+b,0)/classGpas.length).toFixed(1);
-document.getElementById('classStats').innerHTML = `
-  <div class="stat-card"><div class="stat-icon purple">👥</div><div><div class="stat-num">${students.length}</div><div class="stat-label">Оқушылар</div></div></div>
-  <div class="stat-card"><div class="stat-icon gold">📊</div><div><div class="stat-num">${classAvgGpa}</div><div class="stat-label">Сынып GPA</div></div></div>
-  <div class="stat-card"><div class="stat-icon red">⚠️</div><div><div class="stat-num">${students.filter(s=>s.riskLevel==='high').length}</div><div class="stat-label">Жоғары тәуекел</div></div></div>
-  <div class="stat-card"><div class="stat-icon green">🏆</div><div><div class="stat-num">${students.reduce((a,s)=>a+(s.achievements?.length||0),0)}</div><div class="stat-label">Жетістіктер</div></div></div>
-`;
+let originalLessons = Array(10).fill('');
+let currentLessons  = Array(10).fill('');
+let changeCount = 0;
+let currentRecord = null;
 
-function renderTable() {
-  const subj = document.getElementById('subjectFilter').value;
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  document.getElementById('subjectHeader').textContent = subj === 'all' ? 'GPA' : subj;
+// Init webhook from localStorage
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('n8n_schedule_webhook') || DEFAULT_WEBHOOK;
+  document.getElementById('webhookUrl').value = saved;
+});
 
-  const filtered = students.filter(s => s.fullname.toLowerCase().includes(search));
-  const tbody = document.getElementById('classBody');
-  tbody.innerHTML = filtered.map(s => {
-    const avgs = s.bilimClass ? subjectAvg(s.bilimClass) : {};
-    const gpa = s.bilimClass ? overallAvg(s.bilimClass) : '—';
-    const subjAvg = subj !== 'all' && avgs[subj] ? avgs[subj] : null;
-    const displayVal = subj === 'all' ? gpa : (subjAvg ?? '—');
-    const trend = subj !== 'all' && s.bilimClass?.[subj] ? trendArrow(s.bilimClass[subj]) : '';
-    return `
-      <tr>
-        <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:28px;height:28px;font-size:10px">${initials(s.fullname)}</div><strong>${s.fullname}</strong></div></td>
-        <td><span class="badge badge-purple">${s.grade}</span></td>
-        <td><div class="grade-cell ${gradeColor(parseFloat(displayVal))}">${displayVal}</div></td>
-        <td><strong style="color:var(--p1)">${gpa}</strong></td>
-        <td>${riskBadge(s.riskLevel)}</td>
-        <td>${trend}</td>
-      </tr>
-    `;
-  }).join('');
+function saveWebhook() {
+  const url = document.getElementById('webhookUrl').value.trim();
+  if (!url) { toast('Введите URL вебхука', 'error'); return; }
+  localStorage.setItem('n8n_schedule_webhook', url);
+  toast('URL сохранён', 'success');
 }
-renderTable();
+function getWebhook() {
+  return document.getElementById('webhookUrl').value.trim()
+      || localStorage.getItem('n8n_schedule_webhook') || DEFAULT_WEBHOOK;
+}
 
-// Charts
-setTimeout(() => {
-  // Subject averages across class
-  const subjectAvgs = subjects.map(sub => {
-    const vals = students.filter(s => s.bilimClass?.[sub]).map(s => avg(s.bilimClass[sub]));
-    return Math.round(vals.reduce((a,b)=>a+b,0)/(vals.length||1));
-  });
-  barChart(document.getElementById('classSubjectsChart'), subjects.map(s => s.length > 8 ? s.slice(0,8)+'…' : s), subjectAvgs);
+// ── LOAD ───────────────────────────────────────────────────
+async function loadSchedule() {
+  const cls     = document.getElementById('classSelect').value;
+  const day     = document.getElementById('daySelect').value;
+  const dayName = document.getElementById('daySelect').selectedOptions[0]?.text || '';
+  if (!cls || !day) { toast('Выберите класс и день недели', 'error'); return; }
 
-  // Risk pie
-  const high = students.filter(s=>s.riskLevel==='high').length;
-  const medium = students.filter(s=>s.riskLevel==='medium').length;
-  const low = students.filter(s=>s.riskLevel==='low').length;
-  new Chart(document.getElementById('riskChart').getContext('2d'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Жоғары','Орташа','Норма'],
-      datasets: [{ data:[high,medium,low], backgroundColor:['#ef4444','#f59e0b','#10b981'], borderWidth:0 }]
-    },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{font:{size:11}} } } }
+  const wh = getWebhook();
+  setLoading(true);
+  try {
+    const res = await fetch(wh, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get', class: cls, day })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const record = Array.isArray(data) ? data[0] : data;
+    currentRecord = record || null;
+    originalLessons = FIELD_KEYS.map(k => (record && record[k]) ? record[k] : '');
+    currentLessons  = [...originalLessons];
+    renderSchedule(cls, dayName);
+    toast('Расписание загружено', 'success');
+  } catch(e) {
+    toast('Ошибка загрузки: ' + e.message, 'error');
+    currentRecord = null;
+    originalLessons = Array(10).fill('');
+    currentLessons  = Array(10).fill('');
+    renderSchedule(cls, dayName);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── RENDER ─────────────────────────────────────────────────
+function renderSchedule(cls, dayName) {
+  document.getElementById('tagClass').textContent = cls.toUpperCase();
+  document.getElementById('tagDay').textContent   = dayName;
+
+  const grid = document.getElementById('lessonsGrid');
+  grid.innerHTML = '';
+
+  currentLessons.forEach((lesson, i) => {
+    const row = document.createElement('div');
+    row.className = 'lesson-row';
+    row.innerHTML =
+      '<div class="lesson-num"><span>' + (i+1) + '</span></div>' +
+      '<div class="lesson-input-wrap">' +
+        '<input class="lesson-input" type="text" data-index="' + i + '" ' +
+        'placeholder="Урок ' + (i+1) + '…" value="' + escapeHtml(lesson) + '" />' +
+      '</div>' +
+      '<div class="lesson-time">' + LESSON_TIMES[i] + '</div>';
+    grid.appendChild(row);
   });
-}, 50);
+
+  grid.querySelectorAll('.lesson-input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      currentLessons[parseInt(inp.dataset.index)] = inp.value;
+      recalcChanges();
+    });
+  });
+
+  document.getElementById('scheduleCard').style.display = '';
+  document.getElementById('bottomBar').style.display    = '';
+  changeCount = 0;
+  updateChangeCount();
+}
+
+// ── CHANGES ────────────────────────────────────────────────
+function recalcChanges() {
+  changeCount = currentLessons.filter((l, i) => l !== originalLessons[i]).length;
+  updateChangeCount();
+}
+function updateChangeCount() {
+  document.getElementById('changeCount').innerHTML = 'Изменений: <strong>' + changeCount + '</strong>';
+}
+function resetChanges() {
+  currentLessons = [...originalLessons];
+  document.querySelectorAll('.lesson-input').forEach((inp, i) => { inp.value = originalLessons[i]; });
+  changeCount = 0;
+  updateChangeCount();
+  toast('Изменения сброшены', 'info');
+}
+
+// ── SAVE ───────────────────────────────────────────────────
+async function saveSchedule() {
+  const cls = document.getElementById('classSelect').value;
+  const day = document.getElementById('daySelect').value;
+  if (!cls || !day)   { toast('Класс / день не выбраны', 'error'); return; }
+  if (changeCount === 0) { toast('Нет изменений для сохранения', 'info'); return; }
+
+  setLoading(true);
+  const payload = { action: 'set', class: cls, day };
+  FIELD_KEYS.forEach((k, i) => { payload[k] = currentLessons[i]; });
+  if (currentRecord?.id) payload.id = currentRecord.id;
+
+  try {
+    const res = await fetch(getWebhook(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    originalLessons = [...currentLessons];
+    changeCount = 0;
+    updateChangeCount();
+    toast('Расписание сохранено в БД', 'success');
+  } catch(e) {
+    toast('Ошибка сохранения: ' + e.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── HELPERS ────────────────────────────────────────────────
+function setLoading(on) {
+  document.getElementById('loadingOverlay').classList.toggle('visible', on);
+}
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 </body>
 </html>
