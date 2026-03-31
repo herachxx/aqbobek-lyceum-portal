@@ -53,72 +53,82 @@
 </div>
 
 <div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
 <script src="../json/data.js"></script>
 <script src="../js/app.js"></script>
 <script>
-const user = Auth.require(['teacher','admin']);
-buildSidebar('risk', user.role);
-document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    // Ждём, пока LYCEUM_DATA загрузится
+    if (typeof initData === 'function') await initData();
 
-const students = LYCEUM_DATA.students;
-const high = students.filter(s => s.riskLevel === 'high');
-const medium = students.filter(s => s.riskLevel === 'medium');
-const low = students.filter(s => s.riskLevel === 'low');
+    const user = Auth.require(['teacher','admin']);
+    buildSidebar('risk', user.role);
+    document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
 
-document.getElementById('riskStats').innerHTML = `
-  <div class="stat-card"><div class="stat-icon red">🔴</div><div><div class="stat-num">${high.length}</div><div class="stat-label">Жоғары тәуекел</div></div></div>
-  <div class="stat-card"><div class="stat-icon gold">🟡</div><div><div class="stat-num">${medium.length}</div><div class="stat-label">Орташа тәуекел</div></div></div>
-  <div class="stat-card"><div class="stat-icon green">🟢</div><div><div class="stat-num">${low.length}</div><div class="stat-label">Норма</div></div></div>
-  <div class="stat-card"><div class="stat-icon purple">👥</div><div><div class="stat-num">${students.length}</div><div class="stat-label">Барлық оқушы</div></div></div>
-`;
+    const students = LYCEUM_DATA.students;
+    const subjects = LYCEUM_DATA.subjects;
 
-// Table — worst first
-const sorted = [...students].sort((a, b) => {
-  const order = { high:0, medium:1, low:2 };
-  return order[a.riskLevel] - order[b.riskLevel];
+    // Quick stats
+    const high = students.filter(s => s.riskLevel === 'high');
+    const medium = students.filter(s => s.riskLevel === 'medium');
+    const low = students.filter(s => s.riskLevel === 'low');
+    document.getElementById('riskStats').innerHTML = `
+      <div class="stat-card"><div class="stat-icon red">🔴</div><div><div class="stat-num">${high.length}</div><div class="stat-label">Жоғары тәуекел</div></div></div>
+      <div class="stat-card"><div class="stat-icon gold">🟡</div><div><div class="stat-num">${medium.length}</div><div class="stat-label">Орташа тәуекел</div></div></div>
+      <div class="stat-card"><div class="stat-icon green">🟢</div><div><div class="stat-num">${low.length}</div><div class="stat-label">Норма</div></div></div>
+      <div class="stat-card"><div class="stat-icon purple">👥</div><div><div class="stat-num">${students.length}</div><div class="stat-label">Барлық оқушы</div></div></div>
+    `;
+
+    // Table
+    const tbody = document.getElementById('riskBody');
+    const sorted = [...students].sort((a,b) => ({high:0, medium:1, low:2}[a.riskLevel] - {high:0, medium:1, low:2}[b.riskLevel]));
+    sorted.forEach(s => {
+      const avgs = s.bilimClass ? subjectAvg(s.bilimClass) : {};
+      const worst = Object.keys(avgs).sort((a,b)=>avgs[a]-avgs[b])[0];
+      tbody.innerHTML += `
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:30px;height:30px;font-size:10px">${initials(s.fullname)}</div><strong>${s.fullname}</strong></div></td>
+          <td><span class="badge badge-purple">${s.grade}</span></td>
+          <td><strong style="color:var(--p1)">${s.bilimClass ? overallAvg(s.bilimClass) : '—'}</strong></td>
+          <td>${riskBadge(s.riskLevel)}</td>
+          <td>${worst ? `<span class="badge badge-red">${worst}: ${avgs[worst]}</span>` : '—'}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="contactStudent('${s.fullname}')">Хабарлас</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    function contactStudent(name) {
+      toast(`${name} оқушысына хабарлама жіберілді ✓`, 'success');
+    }
+
+    // Charts
+    setTimeout(() => {
+      // Pie
+      new Chart(document.getElementById('riskPieChart').getContext('2d'), {
+        type:'doughnut',
+        data:{
+          labels:['Жоғары','Орташа','Норма'],
+          datasets:[{data:[high.length,medium.length,low.length], backgroundColor:['#ef4444','#f59e0b','#10b981'], borderWidth:0}]
+        },
+        options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{font:{size:11}}}}}
+      });
+
+      // Subjects bar
+      const subAvgs = subjects.map(sub => {
+        const vals = students.filter(s => s.bilimClass?.[sub]).map(s=>avg(s.bilimClass[sub]));
+        return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+      });
+      barChart(document.getElementById('subjectsBarChart'), subjects, subAvgs);
+    }, 50);
+
+  } catch (err) {
+    console.error('Ошибка загрузки данных для страницы риска:', err);
+    toast('Данные не удалось загрузить', 'error');
+  }
 });
-
-const tbody = document.getElementById('riskBody');
-sorted.forEach(s => {
-  const avgs = s.bilimClass ? subjectAvg(s.bilimClass) : {};
-  const worst = Object.keys(avgs).sort((a,b) => avgs[a]-avgs[b])[0];
-  tbody.innerHTML += `
-    <tr>
-      <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar" style="width:30px;height:30px;font-size:10px">${initials(s.fullname)}</div><strong>${s.fullname}</strong></div></td>
-      <td><span class="badge badge-purple">${s.grade}</span></td>
-      <td><strong style="color:var(--p1)">${s.bilimClass ? overallAvg(s.bilimClass) : '—'}</strong></td>
-      <td>${riskBadge(s.riskLevel)}</td>
-      <td>${worst ? `<span class="badge badge-red">${worst}: ${avgs[worst]}</span>` : '—'}</td>
-      <td>
-        <button class="btn btn-primary btn-sm" onclick="contactStudent('${s.fullname}')">Хабарлас</button>
-      </td>
-    </tr>
-  `;
-});
-
-function contactStudent(name) {
-  toast(`${name} оқушысына хабарлама жіберілді ✓`, 'success');
-}
-
-// Pie
-setTimeout(() => {
-  new Chart(document.getElementById('riskPieChart').getContext('2d'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Жоғары', 'Орташа', 'Норма'],
-      datasets: [{ data: [high.length, medium.length, low.length], backgroundColor: ['#ef4444','#f59e0b','#10b981'], borderWidth: 0 }]
-    },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{font:{size:11}} } } }
-  });
-
-  // Subjects bar
-  const subjects = LYCEUM_DATA.subjects;
-  const subAvgs = subjects.map(sub => {
-    const vals = students.filter(s => s.bilimClass?.[sub]).map(s => avg(s.bilimClass[sub]));
-    return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
-  });
-  barChart(document.getElementById('subjectsBarChart'), subjects, subAvgs);
-}, 50);
 </script>
 </body>
 </html>
