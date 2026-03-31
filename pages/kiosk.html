@@ -95,101 +95,122 @@
   </div>
 </div>
 
+<script src="../json/decoder.js"></script>
 <script src="../json/data.js"></script>
 <script src="../js/app.js"></script>
 <script>
-// Clock
-function updateClock() {
-  const now = new Date();
-  document.getElementById('kioskTime').textContent = now.toLocaleTimeString('kk-KZ', { hour:'2-digit', minute:'2-digit' });
-  document.getElementById('kioskDate').textContent = now.toLocaleDateString('kk-KZ', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-}
-setInterval(updateClock, 1000);
-updateClock();
+(async () => {
+  await initData(); // ⬅️ ВАЖНО
 
-// News scroll
-const newsInner = document.getElementById('newsScrollInner');
-const allItems = [
-  ...LYCEUM_DATA.news.map(n => ({
-    type: 'news',
-    title: n.title,
-    body: n.body,
-    meta: formatDateRu(n.date),
-    hot: n.hot,
-    color: n.hot ? '#c084fc' : 'rgba(255,255,255,0.4)',
-  })),
-  ...LYCEUM_DATA.events.map(e => ({
-    type: 'event',
-    title: e.title,
-    body: e.description,
-    meta: `📅 ${formatDateRu(e.date)} · 👥 ${e.participants} адам`,
-    hot: false,
-    color: e.color,
-  })),
-];
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('kioskTime').textContent =
+      now.toLocaleTimeString('kk-KZ', { hour:'2-digit', minute:'2-digit' });
+    document.getElementById('kioskDate').textContent =
+      now.toLocaleDateString('kk-KZ', {
+        weekday:'long',
+        year:'numeric',
+        month:'long',
+        day:'numeric'
+      });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
 
-// Double for seamless loop
-const doubled = [...allItems, ...allItems];
-doubled.forEach(item => {
-  newsInner.innerHTML += `
-    <div class="kiosk-news-card" style="border-left:3px solid ${item.color};">
-      ${item.hot ? '<div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">🔥 ҮЗДІК ЖАҢАЛЫҚ</div>' : ''}
-      <div class="kiosk-news-title">${item.title}</div>
-      <div class="kiosk-news-body">${item.body}</div>
-      <div class="kiosk-news-date">${item.meta}</div>
-    </div>
-  `;
-});
+  // --- NEWS ---
+  const newsInner = document.getElementById('newsScrollInner');
 
-// Set animation duration
-newsInner.style.animationDuration = `${allItems.length * 5}s`;
+  const allItems = [
+    ...(LYCEUM_DATA.news || []).map(n => ({
+      type: 'news',
+      title: n.title,
+      body: n.body,
+      meta: formatDateRu(n.date),
+      hot: n.hot,
+      color: n.hot ? '#c084fc' : 'rgba(255,255,255,0.4)',
+    })),
+    ...(LYCEUM_DATA.events || []).map(e => ({
+      type: 'event',
+      title: e.title,
+      body: e.description,
+      meta: `📅 ${formatDateRu(e.date)} · 👥 ${e.participants} адам`,
+      hot: false,
+      color: e.color,
+    })),
+  ];
 
-// Leaderboard
-const lbDiv = document.getElementById('kioskLeaderboard');
-LYCEUM_DATA.leaderboard.slice(0, 5).forEach(e => {
-  lbDiv.innerHTML += renderLeaderboardRow(e, true);
-});
+  const doubled = [...allItems, ...allItems];
 
-// Events
-const evDiv = document.getElementById('kioskEvents');
-LYCEUM_DATA.events.slice(0, 3).forEach(e => {
-  evDiv.innerHTML += `
-    <div class="kiosk-event-card" style="border-left:3px solid ${e.color}">
-      <div class="kiosk-event-title">${e.title}</div>
-      <div class="kiosk-event-date">📅 ${formatDateRu(e.date)}</div>
-    </div>
-  `;
-});
-
-// Achievements
-const achDiv = document.getElementById('kioskAchievements');
-const allAchs = LYCEUM_DATA.students.flatMap(s =>
-  (s.achievements || []).map(a => ({ ...a, studentName: s.fullname.split(' ').slice(0,2).join(' '), grade: s.grade }))
-).slice(0, 4);
-
-allAchs.forEach(a => {
-  achDiv.innerHTML += `
-    <div class="kiosk-achievement-badge">
-      <div class="kiosk-ach-emoji">${a.icon}</div>
-      <div class="kiosk-ach-info">
-        <strong>${a.studentName}</strong>
-        <span>${a.title.length > 28 ? a.title.slice(0,28)+'…' : a.title} · ${a.year}</span>
+  doubled.forEach(item => {
+    newsInner.innerHTML += `
+      <div class="kiosk-news-card" style="border-left:3px solid ${item.color};">
+        ${item.hot ? '<div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px">🔥 ҮЗДІК ЖАҢАЛЫҚ</div>' : ''}
+        <div class="kiosk-news-title">${item.title}</div>
+        <div class="kiosk-news-body">${item.body}</div>
+        <div class="kiosk-news-date">${item.meta}</div>
       </div>
-    </div>
-  `;
-});
+    `;
+  });
 
-// Ticker content
-const tickerDiv = document.getElementById('tickerContent');
-const tickerItems = [
-  ...LYCEUM_DATA.leaderboard.slice(0,3).map(e => `🥇 ${e.name} — GPA ${e.gpa}`),
-  ...LYCEUM_DATA.events.map(e => `📅 ${e.title} — ${formatDateRu(e.date)}`),
-  ...LYCEUM_DATA.news.map(n => `📰 ${n.title}`),
-  'Ақбөбек лицейі — Батыс Қазақстанның үздік IT мектебі',
-  '📞 +7(778) 680 0636 · a1s.kz',
-];
-const tickerContent = [...tickerItems, ...tickerItems].map(t => `<span class="kiosk-ticker-item">◆ ${t}</span>`).join('');
-tickerDiv.innerHTML = tickerContent;
+  newsInner.style.animationDuration = `${allItems.length * 5}s`;
+
+  // --- LEADERBOARD ---
+  const lbDiv = document.getElementById('kioskLeaderboard');
+  (LYCEUM_DATA.leaderboard || []).slice(0, 5).forEach(e => {
+    lbDiv.innerHTML += renderLeaderboardRow(e, true);
+  });
+
+  // --- EVENTS ---
+  const evDiv = document.getElementById('kioskEvents');
+  (LYCEUM_DATA.events || []).slice(0, 3).forEach(e => {
+    evDiv.innerHTML += `
+      <div class="kiosk-event-card" style="border-left:3px solid ${e.color}">
+        <div class="kiosk-event-title">${e.title}</div>
+        <div class="kiosk-event-date">📅 ${formatDateRu(e.date)}</div>
+      </div>
+    `;
+  });
+
+  // --- ACHIEVEMENTS ---
+  const achDiv = document.getElementById('kioskAchievements');
+
+  const allAchs = (LYCEUM_DATA.students || []).flatMap(s =>
+    (s.achievements || []).map(a => ({
+      ...a,
+      studentName: s.fullname.split(' ').slice(0,2).join(' '),
+      grade: s.grade
+    }))
+  ).slice(0, 4);
+
+  allAchs.forEach(a => {
+    achDiv.innerHTML += `
+      <div class="kiosk-achievement-badge">
+        <div class="kiosk-ach-emoji">${a.icon}</div>
+        <div class="kiosk-ach-info">
+          <strong>${a.studentName}</strong>
+          <span>${a.title.length > 28 ? a.title.slice(0,28)+'…' : a.title} · ${a.year}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  // --- TICKER ---
+  const tickerDiv = document.getElementById('tickerContent');
+
+  const tickerItems = [
+    ...(LYCEUM_DATA.leaderboard || []).slice(0,3).map(e => `🥇 ${e.name} — GPA ${e.gpa}`),
+    ...(LYCEUM_DATA.events || []).map(e => `📅 ${e.title} — ${formatDateRu(e.date)}`),
+    ...(LYCEUM_DATA.news || []).map(n => `📰 ${n.title}`),
+    'Ақбөбек лицейі — Батыс Қазақстанның үздік IT мектебі',
+    '📞 +7(778) 680 0636 · a1s.kz',
+  ];
+
+  tickerDiv.innerHTML = [...tickerItems, ...tickerItems]
+    .map(t => `<span class="kiosk-ticker-item">◆ ${t}</span>`)
+    .join('');
+
+})();
 </script>
 </body>
 </html>
