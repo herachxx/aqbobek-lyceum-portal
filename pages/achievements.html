@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Жетістіктер — Ақбөбек Portal</title>
+  <title>Жетістіктер - Ақбөбек Portal</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -30,7 +30,7 @@
       <!-- All school achievements / leaderboard -->
       <div class="card">
         <div class="section-header">
-          <h3>Мектеп жетістіктері — Топ оқушылар</h3>
+          <h3>Мектеп жетістіктері - Топ оқушылар</h3>
         </div>
         <div id="schoolAchievements" style="display:flex;flex-direction:column;gap:12px;"></div>
       </div>
@@ -40,66 +40,73 @@
 </div>
 
 <div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
 <script src="../json/data.js"></script>
 <script src="../js/app.js"></script>
 <script>
-const user = Auth.require();
-buildSidebar('achievements', user.role);
-document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+(async () => {
+  await initData(); // Ждём, пока LYCEUM_DATA загрузится
 
-let student;
-if (user.role === 'student') student = LYCEUM_DATA.students.find(s => s.id === user.id);
-else if (user.role === 'parent') {
-  const parent = LYCEUM_DATA.parents.find(p => p.id === user.id);
-  student = LYCEUM_DATA.students.find(s => s.id === parent?.childId);
-}
+  const user = Auth.require();
+  buildSidebar('achievements', user.role);
+  document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
 
-// My achievements
-const myDiv = document.getElementById('myAchievements');
-const myAchs = student?.achievements || [];
-document.getElementById('achCount').textContent = `${myAchs.length} жетістік`;
+  let student;
+  if (user.role === 'student') {
+    student = LYCEUM_DATA.students.find(s => s.id === user.id);
+  } else if (user.role === 'parent') {
+    const parent = LYCEUM_DATA.parents.find(p => p.id === user.id);
+    student = LYCEUM_DATA.students.find(s => s.id === parent?.childId);
+  }
 
-if (myAchs.length) {
-  myAchs.forEach(a => {
+  // My achievements
+  const myDiv = document.getElementById('myAchievements');
+  const myAchs = student?.achievements || [];
+  document.getElementById('achCount').textContent = `${myAchs.length} жетістік`;
+
+  if (myAchs.length) {
     const placeColors = {1:'var(--gold)',2:'#9ca3af',3:'#cd7f32'};
-    myDiv.innerHTML += `
-      <div class="card card-hover" style="padding:20px;">
-        <div style="display:flex;align-items:flex-start;gap:14px;">
-          <div style="font-size:40px;line-height:1">${a.icon}</div>
-          <div style="flex:1">
-            <div style="font-weight:700;font-size:15px;margin-bottom:4px;">${a.title}</div>
-            <div style="font-size:13px;color:var(--gray);margin-bottom:10px;">${a.year}</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="badge" style="background:${placeColors[a.place]}22;color:${placeColors[a.place]}">${a.place}-орын</span>
+    myAchs.forEach(a => {
+      myDiv.innerHTML += `
+        <div class="card card-hover" style="padding:20px;">
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <div style="font-size:40px;line-height:1">${a.icon}</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:15px;margin-bottom:4px;">${a.title}</div>
+              <div style="font-size:13px;color:var(--gray);margin-bottom:10px;">${a.year}</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="badge" style="background:${placeColors[a.place]}22;color:${placeColors[a.place]}">${a.place}-орын</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
-  });
-} else {
-  myDiv.innerHTML = '<div class="text-gray" style="grid-column:span 2;text-align:center;padding:40px;">Жетістіктер жоқ. Олимпиада немесе іс-шараға қатысыңыз! 🚀</div>';
-}
+      `;
+    });
+  } else {
+    myDiv.innerHTML = '<div class="text-gray" style="grid-column:span 2;text-align:center;padding:40px;">Жетістіктер жоқ. Олимпиада немесе іс-шараға қатысыңыз! 🚀</div>';
+  }
 
-// School achievements
-const schoolDiv = document.getElementById('schoolAchievements');
-LYCEUM_DATA.students
-  .filter(s => s.achievements?.length > 0)
-  .sort((a, b) => b.achievements.length - a.achievements.length)
-  .forEach(s => {
-    schoolDiv.innerHTML += `
-      <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--cream);border-radius:var(--radius);border:1px solid var(--border);">
-        <div class="avatar avatar-lg">${initials(s.fullname)}</div>
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:15px;margin-bottom:2px;">${s.fullname}</div>
-          <div style="font-size:12px;color:var(--gray);margin-bottom:8px;">${s.grade} · ${s.achievements.length} жетістік</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            ${s.achievements.map(a => `<span class="badge badge-gold">${a.icon} ${a.title.length > 30 ? a.title.slice(0,30)+'…' : a.title}</span>`).join('')}
+  // School achievements
+  const schoolDiv = document.getElementById('schoolAchievements');
+  LYCEUM_DATA.students
+    .filter(s => s.achievements?.length > 0)
+    .sort((a, b) => b.achievements.length - a.achievements.length)
+    .forEach(s => {
+      schoolDiv.innerHTML += `
+        <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--cream);border-radius:var(--radius);border:1px solid var(--border);">
+          <div class="avatar avatar-lg">${initials(s.fullname)}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:15px;margin-bottom:2px;">${s.fullname}</div>
+            <div style="font-size:12px;color:var(--gray);margin-bottom:8px;">${s.grade} · ${s.achievements.length} жетістік</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              ${s.achievements.map(a => `<span class="badge badge-gold">${a.icon} ${a.title.length > 30 ? a.title.slice(0,30)+'…' : a.title}</span>`).join('')}
+            </div>
           </div>
         </div>
-      </div>
-    `;
-  });
+      `;
+    });
+
+})();
 </script>
 </body>
 </html>
