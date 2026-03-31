@@ -77,95 +77,148 @@
 </div>
 
 <div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
 <script src="../json/data.js"></script>
 <script src="../js/app.js"></script>
 <script>
-const user = Auth.require();
-buildSidebar('profile', user.role);
+let student = null;
+let avgs = {};
+let overall = '--';
 
-const student = LYCEUM_DATA.students.find(s => s.id === user.id) || LYCEUM_DATA.students[0];
-const avgs = student?.bilimClass ? subjectAvg(student.bilimClass) : {};
-const overall = student?.bilimClass ? overallAvg(student.bilimClass) : '--';
+// --- INIT ---
+(async () => {
+  await initData(); // ВАЖНО!
 
-document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
-document.getElementById('profileAvatar').textContent = initials(user.fullname || user.login);
-document.getElementById('profileName').textContent = user.fullname || user.login;
-document.getElementById('profileSubtitle').textContent = `${student?.grade || ''} · ${roleLabel(user.role)}`;
-document.getElementById('profileBadges').innerHTML = `
-  <span class="badge badge-purple" style="font-size:13px;padding:6px 14px">GPA ${overall}</span>
-  <span class="badge badge-gold" style="font-size:13px;padding:6px 14px;margin-left:8px">#${student?.rank || '—'} рейтинг</span>
-`;
+  const user = Auth.require();
+  buildSidebar('profile', user.role);
 
-// Stats
-document.getElementById('profileStats').innerHTML = `
-  <div class="stat-card"><div class="stat-icon purple">📊</div><div><div class="stat-num">${overall}</div><div class="stat-label">Орта балл</div></div></div>
-  <div class="stat-card"><div class="stat-icon gold">🏆</div><div><div class="stat-num">${student?.achievements?.length||0}</div><div class="stat-label">Жетістік</div></div></div>
-  <div class="stat-card"><div class="stat-icon green">🎯</div><div><div class="stat-num">${student?.goals?.length||0}</div><div class="stat-label">Мақсат</div></div></div>
-  <div class="stat-card"><div class="stat-icon blue">📅</div><div><div class="stat-num">${student?.events?.length||0}</div><div class="stat-label">Іс-шара</div></div></div>
-`;
+  student = LYCEUM_DATA.students.find(s => s.id === user.id) || LYCEUM_DATA.students[0];
+  avgs = student?.bilimClass ? subjectAvg(student.bilimClass) : {};
+  overall = student?.bilimClass ? overallAvg(student.bilimClass) : '--';
 
-// Info
-document.getElementById('infoGrid').innerHTML = [
-  ['Аты-жөні', user.fullname],
-  ['Логин', '@' + user.login],
-  ['Сынып', student?.grade || '—'],
-  ['Рейтинг', `#${student?.rank || '—'}`],
-  ['Тәуекел деңгейі', `<span class="risk-${student?.riskLevel}">${riskLabel(student?.riskLevel)}</span>`],
-].map(([k, v]) => `
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-    <span style="font-size:13px;color:var(--gray)">${k}</span>
-    <span style="font-size:13px;font-weight:600">${v}</span>
-  </div>
-`).join('');
+  // Avatar + name
+  document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+  document.getElementById('profileAvatar').textContent = initials(user.fullname || user.login);
+  document.getElementById('profileName').textContent = user.fullname || user.login;
+  document.getElementById('profileSubtitle').textContent =
+    `${student?.grade || ''} · ${roleLabel(user.role)}`;
 
-// Radar
-setTimeout(() => {
-  if (Object.keys(avgs).length) radarChart(document.getElementById('profileRadar'), Object.keys(avgs), Object.values(avgs));
-}, 50);
+  document.getElementById('profileBadges').innerHTML = `
+    <span class="badge badge-purple">GPA ${overall}</span>
+    <span class="badge badge-gold">#${student?.rank || '—'} рейтинг</span>
+  `;
 
-// Grades tab
-const gt = document.getElementById('profileGradesTable');
-if (student?.bilimClass) {
-  gt.innerHTML = `<table><thead><tr><th>Пән</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>Орта</th></tr></thead><tbody>
-    ${Object.entries(student.bilimClass).map(([sub,gs])=>`
-      <tr><td><strong>${sub}</strong></td>${gs.map(g=>`<td><div class="grade-cell ${gradeColor(g)}">${g}</div></td>`).join('')}
-      ${'<td></td>'.repeat(7-gs.length)}<td><strong>${avgs[sub]}</strong></td></tr>
-    `).join('')}
-  </tbody></table>`;
-}
+  // Stats
+  document.getElementById('profileStats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon purple">📊</div><div><div class="stat-num">${overall}</div><div class="stat-label">Орта балл</div></div></div>
+    <div class="stat-card"><div class="stat-icon gold">🏆</div><div><div class="stat-num">${student?.achievements?.length||0}</div><div class="stat-label">Жетістік</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">🎯</div><div><div class="stat-num">${student?.goals?.length||0}</div><div class="stat-label">Мақсат</div></div></div>
+    <div class="stat-card"><div class="stat-icon blue">📅</div><div><div class="stat-num">${student?.events?.length||0}</div><div class="stat-label">Іс-шара</div></div></div>
+  `;
 
-// Achievements tab
-const achDiv = document.getElementById('profileAchs');
-(student?.achievements||[]).forEach(a => {
-  achDiv.innerHTML += `<div class="ach-badge-card card"><div class="ach-emoji">${a.icon}</div><div class="ach-info"><strong>${a.title}</strong><span>${a.place}-орын · ${a.year}</span></div></div>`;
-});
-if (!student?.achievements?.length) achDiv.innerHTML = '<div class="text-gray" style="grid-column:span 2;text-align:center;padding:40px">Жетістіктер жоқ</div>';
+  // Info
+  document.getElementById('infoGrid').innerHTML = [
+    ['Аты-жөні', user.fullname],
+    ['Логин', '@' + user.login],
+    ['Сынып', student?.grade || '—'],
+    ['Рейтинг', `#${student?.rank || '—'}`],
+    ['Тәуекел деңгейі', `<span class="risk-${student?.riskLevel}">${riskLabel(student?.riskLevel)}</span>`],
+  ].map(([k, v]) => `
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:13px;color:var(--gray)">${k}</span>
+      <span style="font-size:13px;font-weight:600">${v}</span>
+    </div>
+  `).join('');
 
-// Goals
-const goals = [...(student?.goals || [])];
+  // Radar
+  setTimeout(() => {
+    if (Object.keys(avgs).length) {
+      radarChart(
+        document.getElementById('profileRadar'),
+        Object.keys(avgs),
+        Object.values(avgs)
+      );
+    }
+  }, 50);
+
+  // Grades
+  const gt = document.getElementById('profileGradesTable');
+  if (student?.bilimClass) {
+    gt.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Пән</th><th>1</th><th>2</th><th>3</th>
+            <th>4</th><th>5</th><th>6</th><th>7</th><th>Орта</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(student.bilimClass).map(([sub,gs])=>`
+            <tr>
+              <td><strong>${sub}</strong></td>
+              ${gs.map(g=>`<td><div class="grade-cell ${gradeColor(g)}">${g}</div></td>`).join('')}
+              ${'<td></td>'.repeat(7-gs.length)}
+              <td><strong>${avgs[sub]}</strong></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // Achievements
+  const achDiv = document.getElementById('profileAchs');
+  (student?.achievements || []).forEach(a => {
+    achDiv.innerHTML += `
+      <div class="card">
+        <div>${a.icon}</div>
+        <div><strong>${a.title}</strong><br>${a.place}-орын · ${a.year}</div>
+      </div>
+    `;
+  });
+
+  if (!student?.achievements?.length) {
+    achDiv.innerHTML = '<div style="text-align:center;padding:40px">Жетістіктер жоқ</div>';
+  }
+
+  // Goals
+  goals = [...(student?.goals || [])];
+  renderGoals();
+})();
+
+// --- GOALS ---
+let goals = [];
+
 function renderGoals() {
   const c = document.getElementById('goalsContainer');
   c.innerHTML = goals.map((g, i) => `
     <div class="goal-item">
-      <div class="goal-icon">🎯</div>
-      <div class="goal-text">${g}</div>
-      <button class="btn btn-ghost btn-sm" onclick="removeGoal(${i})">✕</button>
+      <div>${g}</div>
+      <button onclick="removeGoal(${i})">✕</button>
     </div>
-  `).join('') || '<div class="text-gray text-sm text-center" style="padding:20px">Мақсат қосылмаған. "+" батырмасын басыңыз</div>';
+  `).join('') || '<div style="text-align:center;padding:20px">Мақсат жоқ</div>';
 }
-renderGoals();
 
 function addGoal() {
-  const g = prompt('Жаңа мақсат енгізіңіз:');
-  if (g?.trim()) { goals.push(g.trim()); renderGoals(); toast('Мақсат қосылды ✓', 'success'); }
+  const g = prompt('Мақсат енгізіңіз:');
+  if (g?.trim()) {
+    goals.push(g.trim());
+    renderGoals();
+    toast('Қосылды ✓', 'success');
+  }
 }
-function removeGoal(i) { goals.splice(i, 1); renderGoals(); }
 
-// Tabs
+function removeGoal(i) {
+  goals.splice(i, 1);
+  renderGoals();
+}
+
+// --- TABS ---
 function showTab(id, btn) {
   ['info','grades','achievements','goals'].forEach(t => {
     document.getElementById('tab-'+t).style.display = t===id ? 'block' : 'none';
   });
+
   document.querySelectorAll('.login-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
