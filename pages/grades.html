@@ -82,27 +82,34 @@
 </div>
 
 <div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
 <script src="../json/data.js"></script>
 <script src="../js/app.js"></script>
 <script>
-const user = Auth.require();
-buildSidebar('grades', user.role);
-document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+(async () => {
+  await initData(); // Ждём, пока LYCEUM_DATA загрузится
 
-// Get student data
-let student;
-if (user.role === 'student') {
-  student = LYCEUM_DATA.students.find(s => s.id === user.id);
-} else if (user.role === 'parent') {
-  const parent = LYCEUM_DATA.parents.find(p => p.id === user.id);
-  student = LYCEUM_DATA.students.find(s => s.id === parent?.childId);
-} else {
-  student = LYCEUM_DATA.students[0];
-}
+  const user = Auth.require();
+  buildSidebar('grades', user.role);
+  document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
 
-if (!student || !student.bilimClass) {
-  document.getElementById('gradesBody').innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--gray)">Бағалар табылмады</td></tr>';
-} else {
+  // Получаем student после загрузки данных
+  let student;
+  if (user.role === 'student') {
+    student = LYCEUM_DATA.students.find(s => s.id === user.id);
+  } else if (user.role === 'parent') {
+    const parent = LYCEUM_DATA.parents.find(p => p.id === user.id);
+    student = LYCEUM_DATA.students.find(s => s.id === parent?.childId);
+  } else {
+    student = LYCEUM_DATA.students[0];
+  }
+
+  if (!student || !student.bilimClass) {
+    document.getElementById('gradesBody').innerHTML =
+      '<tr><td colspan="11" style="text-align:center;color:var(--gray)">Бағалар табылмады</td></tr>';
+    return;
+  }
+
   const grades = student.bilimClass;
   const subjects = Object.keys(grades);
   const avgs = subjectAvg(grades);
@@ -137,7 +144,7 @@ if (!student || !student.bilimClass) {
     `;
   });
 
-  // Radar
+  // Charts
   setTimeout(() => {
     radarChart(document.getElementById('radarChart'), subjects, Object.values(avgs));
 
@@ -157,12 +164,16 @@ if (!student || !student.bilimClass) {
       const sub = subSel.value;
       const data = grades[sub];
       if (detailChart) detailChart.destroy();
-      detailChart = lineChart(document.getElementById('subjectDetailChart'), data.map((_,i)=>`Тест ${i+1}`), [{ label: sub, data }]);
+      detailChart = lineChart(
+        document.getElementById('subjectDetailChart'),
+        data.map((_,i)=>`Тест ${i+1}`),
+        [{ label: sub, data }]
+      );
     }
     subSel.addEventListener('change', updateDetail);
     updateDetail();
   }, 50);
-}
+})();
 </script>
 </body>
 </html>
