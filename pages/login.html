@@ -159,11 +159,12 @@
 </div>
 
 <div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
 <script src="../json/data.js"></script>
 <script src="../js/app.js"></script>
 <script>
 // Ссылка зашита внутри, поменять через сайт нельзя
-const WEBHOOK_URL = 'https://asicapital.asia/webhook/7b9e11a5-19cb-4b7e-bf18-914908a7fe52';
+// const WEBHOOK_URL = 'https://asicapital.asia/webhook/7b9e11a5-19cb-4b7e-bf18-914908a7fe52';
 
 let authMode = 'n8n'; 
 let formMode = 'login';
@@ -351,5 +352,6 @@ function shakeCard() {
 
 document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 </script>
+
 </body>
 </html>
