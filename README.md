@@ -31,7 +31,7 @@
 
 # 🇬🇧 English
 
-<div align="right"><a href="#-read-this-document-in-your-language">⬆ Back to top</a></div>
+c<div align="right"><a href="#-read-this-document-in-your-language">⬆ Back to top</a></div>
 
 ## Overview
 
@@ -128,7 +128,7 @@ project/
 
 | Name | Role |
 |:---|:---|
-| **Hasan** | Backend · Data Architecture · API Integration |
+| **Adema** | Backend · Data Architecture · API Integration |
 | **Nurasyl** | Frontend · UI Development · Feature Integration |
 | **Aruzhan** | Design · UX · Content |
 
@@ -235,7 +235,7 @@ project/
 
 | Имя | Роль |
 |:---|:---|
-| **Hasan** | Backend · Архитектура данных · API-интеграция |
+| **Adema** | Backend · Архитектура данных · API-интеграция |
 | **Nurasyl** | Frontend · UI-разработка · Интеграция функций |
 | **Aruzhan** | Дизайн · UX · Контент |
 
@@ -292,7 +292,7 @@ python -m http.server 8080
 | Рөл | Логин | Пароль |
 |:---|:---|:---|
 | 👩‍🎓 Оқушы (Айзат) | `aizat.bekova` | `pass123` |
-| 👨‍🎓 Оқушы (Хасан) | `hasan.nurmagambetov` | `hasan123` |
+| 👨‍🎓 Оқушы (Адема) | `adema.tilishbaeva` | `adema123` |
 | 👨‍🎓 Оқушы (Нурасыл) | `nurasyl.dzhaksybekov` | `pass456` |
 | 👩‍🎓 Оқушы (Аружан) | `aruzhan.seitova` | `pass789` |
 | 👨‍🏫 Мұғалім | `teacher1` | `teacher123` |
@@ -342,7 +342,7 @@ project/
 
 | Аты | Рөлі |
 |:---|:---|
-| **Hasan** | Backend · Деректер архитектурасы · API интеграциясы |
+| **Adema** | Backend · Деректер архитектурасы · API интеграциясы |
 | **Nurasyl** | Frontend · UI әзірлеу · Мүмкіндіктерді интеграциялау |
 | **Aruzhan** | Дизайн · UX · Мазмұн |
 
@@ -350,7 +350,7 @@ project/
 
 <div align="center">
 
-*© 2025 Ақбөбек Лицейі - Unified Portal · Hackathon Project*
+*© 2026 Ақбөбек Лицейі - Unified Portal · Hackathon Project*
 
 [![Made with ❤️ in Aktobe](https://img.shields.io/badge/Made_with_%E2%9D%A4%EF%B8%8F_in-Aktobe-ff69b4?style=flat-square)]()
 
