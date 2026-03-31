@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Ментор — Ақбөбек Portal</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">🤖 AI Ментор</div>
+      <div class="topbar-actions">
+        <div class="avatar" id="topbarAvatar"></div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+
+        <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--p1),var(--p3));">
+            <div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:22px;">🤖</div>
+            <div>
+              <div style="font-weight:700;color:#fff;font-size:15px;">AI Ментор</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.7);">Ақбөбек лицейінің жеке ментор жүйесі</div>
+            </div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+              <div style="width:8px;height:8px;background:#10b981;border-radius:50%;animation:pulse 2s infinite"></div>
+              <span style="font-size:12px;color:rgba(255,255,255,0.7)">Онлайн</span>
+            </div>
+          </div>
+
+          <div id="chatMessages" class="ai-messages" style="min-height:360px;max-height:360px;"></div>
+
+          <div class="ai-input-row">
+            <input type="text" class="ai-input" id="chatInput"
+              placeholder="Сұрағыңызды жазыңыз... (мысалы: математикамды жақсарту жолдары)"
+              maxlength="500">
+            <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()">→</button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <h3 style="margin-bottom:12px;">💡 Жылдам сұрақтар</h3>
+            <div style="display:flex;flex-direction:column;gap:6px;" id="quickQuestions"></div>
+          </div>
+          <div class="card">
+            <h3 style="margin-bottom:12px;">📊 Менің үлгерімім</h3>
+            <div id="insightContent"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px;">
+        <div class="card" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#6ee7b7;">
+          <div style="font-size:24px;margin-bottom:8px">📈</div>
+          <div style="font-weight:700;margin-bottom:4px">Күшті жақтарым</div>
+          <div id="strongSubjects" style="font-size:13px;color:#065f46;"></div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fcd34d;">
+          <div style="font-size:24px;margin-bottom:8px">🎯</div>
+          <div style="font-weight:700;margin-bottom:4px">Жетілдіру керек</div>
+          <div id="weakSubjects" style="font-size:13px;color:#92400e;"></div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-color:#93c5fd;">
+          <div style="font-size:24px;margin-bottom:8px">🚀</div>
+          <div style="font-weight:700;margin-bottom:4px">Мансап бағыты</div>
+          <div id="careerSuggestion" style="font-size:13px;color:#1e40af;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
+<script src="../json/data.js"></script>
+<script src="../js/app.js"></script>
+<script>
+const WEBHOOK_AI_URL = 'https://asicapital.asia/webhook/123ed4d4-2837-49a4-b35d-92d57dce41ad';
+
+// ГЛОБАЛЬНЫЕ переменные (ВАЖНО!)
+let student = null;
+let gpa = null;
+let strong = [];
+let weak = [];
+
+// --- ИНИЦИАЛИЗАЦИЯ ---
+(async () => {
+  await initData();
+
+  const user = Auth.require();
+  buildSidebar('ai', user.role);
+  document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+
+  student = LYCEUM_DATA.students.find(s => s.id === user.id) || LYCEUM_DATA.students[0];
+
+  const avgs = student?.bilimClass ? subjectAvg(student.bilimClass) : {};
+  const subjects = Object.keys(avgs).sort((a,b)=>avgs[b]-avgs[a]);
+
+  strong = subjects.slice(0,3);
+  weak = subjects.slice(-3).reverse();
+  gpa = student?.bilimClass ? overallAvg(student.bilimClass) : null;
+
+  // UI
+  document.getElementById('strongSubjects').innerHTML =
+    strong.map(s=>`<div>✓ ${s} (${avgs[s]})</div>`).join('');
+
+  document.getElementById('weakSubjects').innerHTML =
+    weak.map(s=>`<div>→ ${s} (${avgs[s]})</div>`).join('');
+
+  const careerMap = {
+    'Математика': 'Математик, Деректер ғалымы',
+    'Информатика': 'Бағдарламашы, AI инженері',
+    'Физика': 'Физик, Инженер',
+    'Биология': 'Дәрігер, Биотехнолог',
+    'Химия': 'Химик, Фармацевт',
+    'Ағылшын тілі': 'Аудармашы, Халықаралық қатынастар',
+  };
+
+  document.getElementById('careerSuggestion').textContent =
+    careerMap[strong[0]] || 'IT & Технология';
+
+  // Quick questions
+  const quick = document.getElementById('quickQuestions');
+  [
+    'Математикамды қалай жақсарта аламын?',
+    'Мансаптық бағытым туралы кеңес беріңіз',
+    'ЕНТ-ге дайындалу жоспарым?',
+    'Информатика үйрену жолдары?',
+    'Менің нәтижелерімді талдаңыз'
+  ].forEach(q => {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-outline btn-sm w-full';
+    btn.style.cssText = 'text-align:left;justify-content:flex-start;';
+    btn.textContent = q;
+    btn.onclick = () => {
+      document.getElementById('chatInput').value = q;
+      sendMessage();
+    };
+    quick.appendChild(btn);
+  });
+
+  // Insight
+  document.getElementById('insightContent').innerHTML = `
+    <div style="margin-bottom:8px;font-size:13px;color:var(--gray)">Жалпы орта балл</div>
+    <div style="font-size:28px;color:var(--p1);margin-bottom:12px">${gpa || '--'}</div>
+    <div class="progress-bar" style="margin-bottom:16px">
+      <div class="progress-fill" style="width:${gpa ? (gpa/5*100)+'%' : '0'}"></div>
+    </div>
+    <div style="font-size:12px;color:var(--gray)">
+      Рейтинг: <strong style="color:var(--p1)">#${student?.rank || '—'}</strong>
+    </div>
+  `;
+})();
+
+// --- CHAT ---
+const messagesDiv = document.getElementById('chatMessages');
+const input = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+
+function addMessage(text, role) {
+  const div = document.createElement('div');
+  div.className = `ai-msg ${role}`;
+  div.innerHTML = `<div class="ai-bubble">${text}</div>`;
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'ai-msg bot';
+  div.id = 'typingIndicator';
+  div.innerHTML = `<div class="ai-typing"><span></span><span></span><span></span></div>`;
+  messagesDiv.appendChild(div);
+}
+
+function removeTyping() {
+  document.getElementById('typingIndicator')?.remove();
+}
+
+// Приветствие
+addMessage("Сәлем! Мен AI ментормын. Сұрағыңызды жазыңыз 👇", 'bot');
+
+async function sendMessage() {
+  if (!student) {
+    addMessage("⏳ Деректер жүктелуде...", 'bot');
+    return;
+  }
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  sendBtn.disabled = true;
+
+  addMessage(text, 'user');
+  showTyping();
+
+  try {
+    console.log("SENDING:", { text, student });
+
+    const response = await fetch(WEBHOOK_AI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        student: {
+          name: student.fullname,
+          grade: student.grade,
+          gpa: gpa,
+          strong_subjects: strong,
+          weak_subjects: weak,
+          achievements_count: student?.achievements?.length || 0
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    let reply = data.output || data.response || data.text || "Жауап жоқ";
+    reply = reply.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
+
+    removeTyping();
+    addMessage(reply, 'bot');
+
+  } catch (e) {
+    console.error(e);
+    removeTyping();
+    addMessage("❌ Қате: серверге қосыла алмады", 'bot');
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendMessage();
+});
+</script>
+</body>
+</html>
