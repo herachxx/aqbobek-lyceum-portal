@@ -122,6 +122,20 @@
         <input type="text" id="fullnameInput" placeholder="Аты-жөніңізді енгізіңіз">
       </div>
     </div>
+    <div class="form-group reg-only" id="gradeGroup">
+  <label>Сынып</label>
+  <div class="input-icon-wrap">
+    <span class="ico"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+    <select id="gradeInput" style="padding-left:40px !important; width:100%; height:42px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font); font-size:14px; background:#fff; color:var(--text); cursor:pointer;">
+      <option value="">Сыныпты таңдаңыз</option>
+      <option>7A</option><option>7B</option><option>7C</option>
+      <option>8A</option><option>8B</option><option>8C</option><option>8D</option>
+      <option>9A</option><option>9B</option>
+      <option>10A</option><option>10B</option>
+      <option>11A</option><option>11B</option>
+    </select>
+  </div>
+</div>
     <div class="form-group">
       <label>Пароль</label>
       <div class="input-icon-wrap">
@@ -256,8 +270,11 @@ async function loginViaN8n(login, password) {
   const payload = { action: formMode, login, password };
   if (formMode === 'reg') {
     const fn = document.getElementById('fullnameInput').value.trim();
-    if (!fn) { toast('Аты-жөніңізді жазыңыз', 'error'); return; }
+    const grade = document.getElementById('gradeInput').value;
+    if (!fn) { toast('Аты-жөніңізді жазыңыз', 'error'); setLoading(false); return; }
+    if (!grade) { toast('Сыныпты таңдаңыз', 'error'); setLoading(false); return; }
     payload.fullname = fn;
+    payload.grade = grade;
   }
   try {
     const res = await fetch(WEBHOOK_URL, {
