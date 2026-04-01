@@ -121,7 +121,7 @@ project/
 | Data | JSON via webhook endpoint |
 | Auth | `sessionStorage`-based role authentication |
 
-## 👥 Team
+## 👥 Team "Turtle"
 
 | Name | Role |
 |:---|:---|
@@ -227,7 +227,7 @@ project/
 | Данные | JSON через вебхук-эндпоинт |
 | Авторизация | Ролевая аутентификация на `sessionStorage` |
 
-## 👥 Команда
+## 👥 Команда "Turtle"
 
 | Имя | Роль |
 |:---|:---|
@@ -332,7 +332,7 @@ project/
 | Деректер | Вебхук-эндпоинт арқылы JSON |
 | Аутентификация | `sessionStorage` негізіндегі рөлдік жүйе |
 
-## 👥 Команда
+## 👥 Команда "Turtle"
 
 | Аты | Рөлі |
 |:---|:---|
