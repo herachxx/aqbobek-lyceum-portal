@@ -30,7 +30,7 @@
 
 # 🇬🇧 English
 
-c<div align="right"><a href="#-read-this-document-in-your-language">⬆ Back to top</a></div>
+<div align="right"><a href="#-read-this-document-in-your-language">⬆ Back to top</a></div>
 
 ## Overview
 
