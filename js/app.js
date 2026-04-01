@@ -42,6 +42,7 @@ const ICONS = {
   school:      '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 22v-4a2 2 0 1 0-4 0v4"/><path d="m18 10 4 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8l4-2"/><path d="M18 5v17"/><path d="m4 6 8-4 8 4"/><path d="M6 5v17"/><circle cx="12" cy="9" r="2"/></svg>',
   logOut:      '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>',
   shield:      '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>',
+  gradeBook: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/><path d="M13 13.5h3"/><path d="M13 17.5h3"/><path d="m7 13 1 1 2-2"/><path d="m7 17 1 1 2-2"/></svg>',
 };
 window.ICONS = ICONS;
 document.addEventListener('DOMContentLoaded', async () => {
@@ -168,7 +169,7 @@ function buildSidebar(activeId, role) {
     teacher: [
       { id: 'dashboard', icon: ICONS.home, label: 'Негізгі бет', href: 'dashboard.html' },
       { id: 'grades', icon: ICONS.barChart, label: 'Бағалар (сынып)', href: 'teacher-grades.html' },
-      { id: 'rate student', icon: '🗓️', label: 'Оценивание', href: 'rating.html' },
+      { id: 'rate student', icon: ICONS.gradebook, label: 'Баға қою', href: 'rating.html' },
       { id: 'schedule', icon: ICONS.calendar, label: 'Расписание', href: 'schedule.html' },
       { id: 'achievements', icon: ICONS.trophy, label: 'Жетістіктер', href: 'achievements.html' },
       { id: 'events', icon: ICONS.calendar, label: 'Іс-шаралар', href: 'events.html' },
