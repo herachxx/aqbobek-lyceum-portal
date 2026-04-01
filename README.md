@@ -10,7 +10,6 @@
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
-[![Claude AI](https://img.shields.io/badge/Claude_API-D97757?style=for-the-badge&logo=anthropic&logoColor=white)](https://www.anthropic.com/)
 
 [![Status](https://img.shields.io/badge/Status-Hackathon_Project-blueviolet?style=flat-square)]()
 [![Roles](https://img.shields.io/badge/Roles-Student_%7C_Teacher_%7C_Parent_%7C_Admin-blue?style=flat-square)]()
@@ -77,7 +76,7 @@ python -m http.server 8080
 | Role | Login | Password |
 |:---|:---|:---|
 | Student (Aizat) | `aizat.bekova` | `pass123` |
-| Student (Hasan) | `adema.tilishbaeva` | `adema123` |
+| Student (Adema) | `adema.tilishbaeva` | `adema123` |
 | Student (Nurasyl) | `nurasyl.dzhaksybekov` | `pass456` |
 | Student (Aruzhan) | `aruzhan.seitova` | `pass789` |
 | Teacher | `teacher1` | `teacher123` |
@@ -119,7 +118,6 @@ project/
 | Logic | ![JavaScript](https://img.shields.io/badge/-Vanilla_JS_(ES2020+)-F7DF1E?logo=javascript&logoColor=black&style=flat-square) |
 | Charts | ![Chart.js](https://img.shields.io/badge/-Chart.js_4.4-FF6384?logo=chartdotjs&logoColor=white&style=flat-square) Radar · Line · Bar |
 | Fonts | Sora + Spectral (Google Fonts) |
-| AI | ![Claude](https://img.shields.io/badge/-Anthropic_Claude_API-D97757?logo=anthropic&logoColor=white&style=flat-square) `claude-sonnet-4` |
 | Data | JSON via webhook endpoint |
 | Auth | `sessionStorage`-based role authentication |
 
@@ -127,9 +125,9 @@ project/
 
 | Name | Role |
 |:---|:---|
-| **Adema** | Backend · Data Architecture · API Integration |
-| **Nurasyl** | Frontend · UI Development · Feature Integration |
-| **Aruzhan** | Design · UX · Content |
+| **Nurasyl** | Backend · Data Architecture · API Integration |
+| **Aruzhan** | Frontend · UI Development · Feature Integration |
+| **Adema** | Design · UX · Content |
 
 ---
 
@@ -141,7 +139,7 @@ project/
 
 ## Обзор
 
-**Ақбөбек Unified Portal** - ролевое веб-приложение, которое собирает всю академическую жизнь школы в одном месте. Платформа объединяет учеников, учителей, родителей и администраторов: отслеживание оценок (BilimClass), персональный AI-ментор (Claude API), школьный киоск-дисплей, система достижений, управление мероприятиями и рейтинг учеников. Всё работает на стороне клиента - установка не требуется.
+**Aqbobek Unified Portal** - ролевое веб-приложение, которое собирает всю академическую жизнь школы в одном месте. Платформа объединяет учеников, учителей, родителей и администраторов: отслеживание оценок (BilimClass), персональный AI-ментор (Claude API), школьный киоск-дисплей, система достижений, управление мероприятиями и рейтинг учеников. Всё работает на стороне клиента - установка не требуется.
 
 ## Функциональность
 
@@ -226,7 +224,6 @@ project/
 | Логика | ![JavaScript](https://img.shields.io/badge/-Vanilla_JS_(ES2020+)-F7DF1E?logo=javascript&logoColor=black&style=flat-square) |
 | Графики | ![Chart.js](https://img.shields.io/badge/-Chart.js_4.4-FF6384?logo=chartdotjs&logoColor=white&style=flat-square) Радар · Линия · Столбец |
 | Шрифты | Sora + Spectral (Google Fonts) |
-| ИИ | ![Claude](https://img.shields.io/badge/-Anthropic_Claude_API-D97757?logo=anthropic&logoColor=white&style=flat-square) `claude-sonnet-4` |
 | Данные | JSON через вебхук-эндпоинт |
 | Авторизация | Ролевая аутентификация на `sessionStorage` |
 
@@ -234,10 +231,9 @@ project/
 
 | Имя | Роль |
 |:---|:---|
-| **Adema** | Backend · Архитектура данных · API-интеграция |
-| **Nurasyl** | Frontend · UI-разработка · Интеграция функций |
-| **Aruzhan** | Дизайн · UX · Контент |
-
+| **Nurasyl** | Backend · Архитектура данных · API-интеграция |
+| **Aruzhan** | Frontend · UI-разработка · Интеграция функций |
+| **Adema** | Дизайн · UX · Контент |
 ---
 
 <br/>
@@ -333,7 +329,6 @@ project/
 | Логика | ![JavaScript](https://img.shields.io/badge/-Vanilla_JS_(ES2020+)-F7DF1E?logo=javascript&logoColor=black&style=flat-square) |
 | Диаграммалар | ![Chart.js](https://img.shields.io/badge/-Chart.js_4.4-FF6384?logo=chartdotjs&logoColor=white&style=flat-square) Radar · Line · Bar |
 | Қаріптер | Sora + Spectral (Google Fonts) |
-| Жасанды интеллект | ![Claude](https://img.shields.io/badge/-Anthropic_Claude_API-D97757?logo=anthropic&logoColor=white&style=flat-square) `claude-sonnet-4` |
 | Деректер | Вебхук-эндпоинт арқылы JSON |
 | Аутентификация | `sessionStorage` негізіндегі рөлдік жүйе |
 
@@ -341,9 +336,9 @@ project/
 
 | Аты | Рөлі |
 |:---|:---|
-| **Adema** | Backend · Деректер архитектурасы · API интеграциясы |
-| **Nurasyl** | Frontend · UI әзірлеу · Мүмкіндіктерді интеграциялау |
-| **Aruzhan** | Дизайн · UX · Мазмұн |
+| **Nurasyl** | Backend · Деректер архитектурасы · API интеграциясы |
+| **Aruzhan** | Frontend · UI әзірлеу · Мүмкіндіктерді интеграциялау |
+| **Adema** | Дизайн · UX · Мазмұн |
 
 ---
 
