@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Рейтинг - Aqbobek Lyceum</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .modal-overlay {
+      position:fixed;inset:0;background:rgba(26,10,34,0.55);
+      backdrop-filter:blur(4px);z-index:1000;
+      display:flex;align-items:center;justify-content:center;padding:16px;
+      opacity:0;pointer-events:none;transition:opacity 0.2s;
+    }
+    .modal-overlay.open { opacity:1;pointer-events:all; }
+    .modal {
+      background:#fff;border-radius:20px;padding:32px;width:100%;max-width:660px;
+      max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(26,10,34,0.35);
+      transform:translateY(16px);transition:transform 0.2s;
+    }
+    .modal-overlay.open .modal { transform:translateY(0); }
+    .modal-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:20px; }
+    .modal-title { font-size:18px;font-weight:700;color:var(--dark); }
+    .modal-close {
+      width:32px;height:32px;border:none;background:var(--cream);border-radius:8px;
+      cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;
+      color:var(--gray);transition:background 0.15s;
+    }
+    .modal-close:hover { background:var(--border); }
+    .grade-subject-block { margin-bottom:18px; }
+    .grade-subject-label {
+      font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+      color:var(--p1);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);
+    }
+    .grade-scores-row { display:flex;flex-wrap:wrap;gap:7px;align-items:center; }
+    .score-wrap { display:flex;align-items:center;gap:3px;position:relative; }
+    .grade-input {
+      width:50px;padding:6px 6px;border:1.5px solid var(--border);border-radius:8px;
+      font-family:var(--font);font-size:13px;font-weight:600;text-align:center;
+      color:var(--dark);outline:none;transition:border-color 0.15s,box-shadow 0.15s;
+      -moz-appearance:textfield;
+    }
+    .grade-input::-webkit-inner-spin-button,
+    .grade-input::-webkit-outer-spin-button { -webkit-appearance:none; }
+    .grade-input:focus { border-color:var(--p1);box-shadow:0 0 0 3px rgba(89,0,122,0.08); }
+    .grade-input.is-new { border-color:var(--green);background:#f0fdf4; }
+    .del-score-btn {
+      width:18px;height:18px;border:none;border-radius:50%;background:#fee2e2;
+      color:var(--red);font-size:10px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;transition:opacity 0.15s;flex-shrink:0;
+    }
+    .score-wrap:hover .del-score-btn { opacity:1; }
+    .add-score-btn {
+      width:32px;height:32px;border:1.5px dashed var(--border);border-radius:8px;
+      background:transparent;cursor:pointer;font-size:18px;color:var(--gray);
+      display:flex;align-items:center;justify-content:center;
+      transition:all 0.15s;flex-shrink:0;line-height:1;
+    }
+    .add-score-btn:hover { border-color:var(--p1);color:var(--p1);background:#f3e8ff; }
+    .gpa-chip {
+      display:inline-flex;align-items:center;gap:4px;padding:4px 14px;
+      border-radius:100px;font-size:13px;font-weight:700;
+      background:#f3e8ff;color:var(--p1);transition:background 0.2s;
+    }
+    .saving-badge {
+      position:fixed;bottom:24px;right:24px;z-index:2000;
+      background:var(--p1);color:#fff;padding:10px 20px;border-radius:100px;
+      font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);
+      display:none;align-items:center;gap:8px;
+    }
+    .saving-badge.show { display:flex; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .spinner { width:14px;height:14px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">📊 Рейтинг</div>
+      <div class="topbar-actions">
+        <button id="refreshBtn" class="btn btn-outline btn-sm">🔄 Жаңарту</button>
+        <div class="avatar" id="topbarAvatar"></div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="quick-stats" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-icon gold">📊</div>
+          <div><div class="stat-num" id="statTotal">-</div><div class="stat-label">Барлық оқушы</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">🏆</div>
+          <div><div class="stat-num" id="statAvgGpa">-</div><div class="stat-label">Орташа ГПА</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">⭐</div>
+          <div><div class="stat-num" id="statTopSubject">-</div><div class="stat-label">Топ пән</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">📈</div>
+          <div><div class="stat-num" id="statMyRank">-</div><div class="stat-label">Менің орным</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px;padding:16px 20px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:13px;font-weight:600;color:var(--gray);">Пән:</span>
+          <div id="subjectTabs" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+      <div id="myPositionCard" class="card" style="margin-bottom:20px;display:none;">
+        <div class="section-header" style="margin-bottom:14px;">
+          <h3>Менің позициям</h3>
+          <span id="myPosBadge" class="badge badge-purple"></span>
+        </div>
+        <div id="myPositionContent"></div>
+      </div>
+      <div class="card">
+        <div class="section-header" style="margin-bottom:16px;">
+          <h3>Толық рейтинг</h3>
+          <span id="totalCount" class="badge badge-purple"></span>
+        </div>
+        <div id="loadingState" style="text-align:center;padding:48px 0;">
+          <div style="font-size:36px;margin-bottom:12px;">⏳</div>
+          <div style="font-size:14px;color:var(--gray);">Деректер жүктелуде...</div>
+        </div>
+        <div id="errorState" style="display:none;text-align:center;padding:48px 0;">
+          <div style="font-size:36px;margin-bottom:12px;">❌</div>
+          <div style="font-size:14px;color:var(--red);margin-bottom:16px;" id="errorMsg"></div>
+          <button class="btn btn-primary btn-sm" onclick="loadRating()">Қайта жүктеу</button>
+        </div>
+        <div id="ratingTable" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalStudentName">-</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:3px;" id="modalStudentMeta"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;padding:12px 16px;background:var(--cream);border-radius:var(--radius-sm);border:1px solid var(--border);">
+      <span style="font-size:13px;color:var(--gray);font-weight:600;">Есептелген ГПА:</span>
+      <span class="gpa-chip" id="modalGpaPreview">-</span>
+      <span style="font-size:11px;color:var(--gray);">(нақты уақытта жаңарады)</span>
+    </div>
+    <div id="modalSubjects"></div>
+    <div style="display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+      <button class="btn btn-primary" style="flex:1;" onclick="saveGrades()">💾 Сақтау</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Болдырмау</button>
+    </div>
+  </div>
+</div>
+<div class="saving-badge" id="savingBadge">
+  <div class="spinner" id="savingSpinner"></div>
+  <span id="savingText">Сақталуда...</span>
+</div>
+<div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
+<script src="../json/data.js"></script>
+<script src="../js/app.js"></script>
+<script>
+const N8N_URL  = 'https://asicapital.asia/webhook/cf18da4f-ba7e-4a70-a65b-4a7d69a5682c';
+const SUBJECTS = ['Математика','Физика','Химия','Информатика','Ағылшын тілі','Қазақ тілі','Биология','Тарих'];
+let currentSubject = 'gpa';
+let allStudents    = [];
+let currentUser    = null;
+let editingStudent = null;
+async function loadRating() {
+  setLoadingState('loading');
+  try {
+    const res = await fetch(N8N_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'get' })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const raw = await res.json();
+    console.log('[n8n raw]', raw);
+    const unwrap = val => {
+      if (Array.isArray(val)) return val;
+      if (val && typeof val === 'object') {
+        for (const k of ['students','data','users','items','result','rows','body']) {
+          if (Array.isArray(val[k])) return val[k];
+        }
+        if ('role' in val)  return [val];
+        if (val.json)       return [val.json];
+      }
+      return [];
+    };
+    let candidates = [];
+    if (Array.isArray(raw)) {
+      if (raw.length && raw[0] && typeof raw[0]==='object' && !('role' in raw[0])) {
+        raw.forEach(item => candidates.push(...unwrap(item)));
+        if (candidates.every(c => !c?.role)) candidates = raw;
+      } else {
+        candidates = raw;
+      }
+    } else {
+      candidates = unwrap(raw);
+    }
+    allStudents = candidates
+      .filter(u => u && u.role === 'student')
+      .map(s => {
+        let bilim = s.bilimClass;
+        if (typeof bilim === 'string') { try { bilim = JSON.parse(bilim); } catch { bilim = {}; } }
+        let achs = s.achievements;
+        if (typeof achs === 'string')  { try { achs  = JSON.parse(achs);  } catch { achs  = []; } }
+        return { ...s, bilimClass: bilim||{}, achievements: Array.isArray(achs)?achs:[] };
+      });
+    if (!allStudents.length) throw new Error('Студент табылмады. Консольді тексеріңіз.');
+    buildSubjectTabs();
+    computeStats();
+    renderTable();
+    setLoadingState('done');
+  } catch(err) {
+    console.error(err);
+    document.getElementById('errorMsg').textContent = err.message;
+    setLoadingState('error');
+  }
+}
+async function saveGrades() {
+  if (!editingStudent) return;
+  const updatedBilim = {};
+  document.querySelectorAll('.grade-subject-block').forEach(block => {
+    const subj = block.dataset.subject;
+    updatedBilim[subj] = [...block.querySelectorAll('.grade-input')]
+      .map(inp => { const v = parseInt(inp.value,10); return isNaN(v)?null:Math.min(100,Math.max(0,v)); })
+      .filter(v => v !== null);
+  });
+  const subAvgs = Object.values(updatedBilim)
+    .filter(a => a.length)
+    .map(a => a.reduce((x,y)=>x+y,0)/a.length);
+  const newGpa = subAvgs.length
+    ? parseFloat((subAvgs.reduce((x,y)=>x+y,0)/subAvgs.length/20).toFixed(2))
+    : editingStudent.gpa;
+  const idx = allStudents.findIndex(s => s.id === editingStudent.id);
+  if (idx !== -1) {
+    allStudents[idx] = { ...allStudents[idx], bilimClass: updatedBilim, gpa: newGpa };
+  }
+  showSaving(true, 'Сақталуда...', true);
+  try {
+    const payload = {
+      action:     'update',
+      id:          editingStudent.id,
+      login:       editingStudent.login,
+      bilimClass:  JSON.stringify(updatedBilim),
+      gpa:         newGpa
+    };
+    console.log('[n8n save payload]', payload);
+    const res = await fetch(N8N_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showSaving(true, '✅ Сақталды!', false);
+    setTimeout(() => showSaving(false), 1800);
+    computeStats();
+    renderTable();
+    closeModal();
+  } catch(err) {
+    console.error(err);
+    showSaving(true, '❌ ' + err.message, false);
+    setTimeout(() => showSaving(false), 3000);
+  }
+}
+function openEditModal(studentId) {
+  const s = allStudents.find(st => st.id === studentId);
+  if (!s) return;
+  editingStudent = JSON.parse(JSON.stringify(s));
+  document.getElementById('modalStudentName').textContent = s.fullname;
+  document.getElementById('modalStudentMeta').textContent = s.grade + ' · ГПА: ' + (s.gpa ?? '-');
+  updateGpaPreview(s.bilimClass);
+  const container = document.getElementById('modalSubjects');
+  container.innerHTML = '';
+  SUBJECTS.forEach(subj => {
+    const scores = Array.isArray(s.bilimClass?.[subj]) ? [...s.bilimClass[subj]] : [];
+    const block = document.createElement('div');
+    block.className = 'grade-subject-block';
+    block.dataset.subject = subj;
+    block.innerHTML = `
+      <div class="grade-subject-label">${subj}
+        <span style="font-weight:400;color:var(--gray);font-size:10px;margin-left:6px;text-transform:none;">
+          орт.: ${scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '-'}
+        </span>
+      </div>
+      <div class="grade-scores-row"></div>`;
+    container.appendChild(block);
+    const row = block.querySelector('.grade-scores-row');
+    scores.forEach(val => addScoreChip(row, val, false));
+    const addBtn = document.createElement('button');
+    addBtn.className  = 'add-score-btn';
+    addBtn.title      = 'Жаңа баға қосу';
+    addBtn.textContent = '+';
+    addBtn.onclick = () => {
+      addScoreChip(row, '', true);
+      row.appendChild(addBtn);
+      updateGpaPreview(collectModalBilim());
+    };
+    row.appendChild(addBtn);
+  });
+  document.getElementById('editModal').classList.add('open');
+}
+function addScoreChip(row, value, isNew) {
+  const wrap = document.createElement('div');
+  wrap.className = 'score-wrap';
+  const inp = document.createElement('input');
+  inp.type        = 'number';
+  inp.min         = 0;
+  inp.max         = 100;
+  inp.className   = 'grade-input' + (isNew ? ' is-new' : '');
+  inp.value       = value !== '' ? value : '';
+  inp.placeholder = '0–100';
+  inp.addEventListener('input', () => {
+    inp.classList.remove('is-new');
+    const v = parseInt(inp.value,10);
+    if (!isNaN(v)) inp.value = Math.min(100,Math.max(0,v));
+    updateGpaPreview(collectModalBilim());
+  });
+  const del = document.createElement('button');
+  del.className   = 'del-score-btn';
+  del.title       = 'Жою';
+  del.textContent = '✕';
+  del.onclick     = () => { wrap.remove(); updateGpaPreview(collectModalBilim()); };
+  wrap.appendChild(inp);
+  wrap.appendChild(del);
+  row.appendChild(wrap);
+  if (isNew) setTimeout(() => inp.focus(), 30);
+}
+function collectModalBilim() {
+  const bilim = {};
+  document.querySelectorAll('.grade-subject-block').forEach(block => {
+    bilim[block.dataset.subject] = [...block.querySelectorAll('.grade-input')]
+      .map(i => parseInt(i.value,10)).filter(v => !isNaN(v));
+  });
+  return bilim;
+}
+function updateGpaPreview(bilim) {
+  const avgs = Object.values(bilim)
+    .filter(a => a.length)
+    .map(a => a.reduce((x,y)=>x+y,0)/a.length);
+  const gpa = avgs.length
+    ? (avgs.reduce((x,y)=>x+y,0)/avgs.length/20).toFixed(2)
+    : '-';
+  document.getElementById('modalGpaPreview').textContent = gpa;
+}
+function closeModal() {
+  document.getElementById('editModal').classList.remove('open');
+  editingStudent = null;
+}
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+function showSaving(show, text, spinning) {
+  const el  = document.getElementById('savingBadge');
+  const sp  = document.getElementById('savingSpinner');
+  const txt = document.getElementById('savingText');
+  if (show) {
+    txt.textContent  = text || '';
+    sp.style.display = spinning ? 'block' : 'none';
+    el.classList.add('show');
+  } else {
+    el.classList.remove('show');
+  }
+}
+function setLoadingState(state) {
+  document.getElementById('loadingState').style.display = state==='loading' ? 'block' : 'none';
+  document.getElementById('errorState').style.display   = state==='error'   ? 'block' : 'none';
+  document.getElementById('ratingTable').style.display  = state==='done'    ? 'block' : 'none';
+}
+function buildSubjectTabs() {
+  const tabs = [{ key:'gpa', label:'🎯 ГПА (жалпы)' }, ...SUBJECTS.map(s => ({ key:s, label:s }))];
+  document.getElementById('subjectTabs').innerHTML = tabs.map(t => `
+    <button class="btn btn-sm ${t.key===currentSubject?'btn-primary':'btn-ghost'}"
+      style="font-size:12px;padding:6px 12px;"
+      onclick="switchSubject('${t.key}')">${t.label}</button>
+  `).join('');
+}
+function switchSubject(subj) {
+  currentSubject = subj;
+  buildSubjectTabs();
+  renderTable();
+}
+function computeStats() {
+  document.getElementById('statTotal').textContent = allStudents.length;
+  const gpas = allStudents.map(s=>parseFloat(s.gpa)).filter(Boolean);
+  document.getElementById('statAvgGpa').textContent = gpas.length
+    ? (gpas.reduce((a,b)=>a+b,0)/gpas.length).toFixed(2) : '-';
+  let topSubj='-', topVal=0;
+  SUBJECTS.forEach(subj => {
+    const vals = allStudents.flatMap(s => Array.isArray(s.bilimClass?.[subj])?s.bilimClass[subj]:[]);
+    if (vals.length) { const m=vals.reduce((a,b)=>a+b,0)/vals.length; if(m>topVal){topVal=m;topSubj=subj;} }
+  });
+  document.getElementById('statTopSubject').textContent = topSubj.length>8 ? topSubj.slice(0,8)+'…' : topSubj;
+  document.getElementById('statMyRank').textContent =
+    (currentUser?.role==='student')
+      ? (() => { const me=allStudents.find(s=>s.id===currentUser.id); return me?`#${me.rank||'-'}`:'-'; })()
+      : '-';
+}
+function getScore(s, subj) {
+  if (subj==='gpa') return parseFloat(s.gpa)||0;
+  const arr = s.bilimClass?.[subj];
+  return Array.isArray(arr)&&arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+}
+function renderTable() {
+  const canEdit = currentUser && (currentUser.role==='teacher'||currentUser.role==='admin');
+  const sorted  = [...allStudents].sort((a,b)=>getScore(b,currentSubject)-getScore(a,currentSubject));
+  const isSubj  = currentSubject !== 'gpa';
+  document.getElementById('totalCount').textContent = `${sorted.length} оқушы`;
+  const medals     = ['🥇','🥈','🥉'];
+  const rankColors = ['var(--gold)','#9ca3af','#cd7f32'];
+  const rows = sorted.map((s, i) => {
+    const isMe   = currentUser?.id === s.id;
+    const score  = getScore(s, currentSubject);
+    const display= isSubj ? score.toFixed(1) : score.toFixed(2);
+    const fillPct= isSubj ? Math.min(score,100) : Math.min((score/5)*100,100);
+    const trendEl = s.riskLevel==='low'
+      ? `<span class="badge badge-green">📈 Жоғары</span>`
+      : s.riskLevel==='high'
+      ? `<span class="badge badge-red">📉 Тәуекел</span>`
+      : `<span class="badge badge-gold">📊 Орта</span>`;
+    const rankEl = i<3
+      ? `<span style="font-size:24px">${medals[i]}</span>`
+      : `<span style="font-size:18px;font-weight:700;color:var(--gray);">#${i+1}</span>`;
+    const editBtn = canEdit
+      ? `<button class="btn btn-outline btn-sm"
+           style="font-size:11px;padding:5px 10px;flex-shrink:0;"
+           onclick="openEditModal(${s.id})">✏️ Өңдеу</button>`
+      : '';
+    return `
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;
+        background:${isMe?'linear-gradient(90deg,#f3e8ff,#faf8fc)':'var(--cream)'};
+        border-radius:var(--radius);border:1.5px solid ${isMe?'var(--p1)':'var(--border)'};
+        transition:transform 0.15s,box-shadow 0.15s;"
+        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-lg)'"
+        onmouseout="this.style.transform='';this.style.boxShadow=''"
+      >
+        <div style="width:38px;text-align:center;flex-shrink:0;">${rankEl}</div>
+        <div class="avatar avatar-md" style="${i===0?'background:linear-gradient(135deg,var(--gold),#fbbf24);':i===1?'background:linear-gradient(135deg,#9ca3af,#d1d5db);':i===2?'background:linear-gradient(135deg,#cd7f32,#e8a050);':''}">
+          ${initials(s.fullname)}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:14px;margin-bottom:2px;${isMe?'color:var(--p1)':''}">
+            ${s.fullname}
+            ${isMe?'<span style="font-size:10px;background:var(--p1);color:#fff;padding:1px 6px;border-radius:100px;margin-left:4px;">мен</span>':''}
+          </div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:6px;">${s.grade}</div>
+          <div class="progress-bar" style="height:5px;max-width:200px;">
+            <div class="progress-fill" style="width:${fillPct}%;background:${i===0?'var(--gold)':i===1?'#9ca3af':i===2?'#cd7f32':'var(--p1)'}"></div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:var(--font-serif);font-size:22px;font-weight:700;color:${i<3?rankColors[i]:'var(--dark)'}">
+            ${display}
+          </div>
+          <div style="font-size:11px;color:var(--gray);">${isSubj?'балл':'ГПА'}</div>
+        </div>
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          ${trendEl}
+          <span style="font-size:11px;color:var(--gray);">${s.achievements?.length||0} 🏆</span>
+          ${editBtn}
+        </div>
+      </div>`;
+  }).join('');
+  document.getElementById('ratingTable').innerHTML =
+    `<div style="display:flex;flex-direction:column;gap:8px;">${rows}</div>`;
+  renderMyPosition(sorted);
+}
+function renderMyPosition(sorted) {
+  if (!currentUser || currentUser.role!=='student' || !sorted) return;
+  const myIdx = sorted.findIndex(s => s.id===currentUser.id);
+  if (myIdx===-1) return;
+  const me    = sorted[myIdx];
+  const isSubj= currentSubject!=='gpa';
+  const score = getScore(me, currentSubject);
+  const above = myIdx>0 ? sorted[myIdx-1] : null;
+  const below = sorted[myIdx+1] || null;
+  const diff  = above ? (getScore(above,currentSubject)-score).toFixed(isSubj?1:2) : null;
+  document.getElementById('myPosBadge').textContent = `#${myIdx+1} орын`;
+  document.getElementById('myPositionCard').style.display = 'block';
+  document.getElementById('myPositionContent').innerHTML = `
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <div class="avatar avatar-lg" style="background:linear-gradient(135deg,var(--p1),var(--p3));">
+        ${initials(me.fullname)}
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:16px;">${me.fullname}</div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:8px;">${me.grade}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span class="badge badge-purple">${isSubj?currentSubject:'ГПА'}: ${score.toFixed(isSubj?1:2)}</span>
+          ${above
+            ? `<span class="badge badge-gold">⬆ ${diff} артта: ${above.fullname.split(' ')[0]}</span>`
+            : '<span class="badge badge-green">🏆 Бірінші орын!</span>'}
+          ${below ? `<span class="badge badge-gray">⬇ Келесі: ${below.fullname.split(' ')[0]}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+(async () => {
+  await initData();
+  currentUser = Auth.require();
+  buildSidebar('rating', currentUser.role);
+  document.getElementById('topbarAvatar').textContent = initials(currentUser.fullname || currentUser.login);
+  document.getElementById('refreshBtn').addEventListener('click', loadRating);
+  buildSubjectTabs();
+  loadRating();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Расписание - Aqbobek Lyceum</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .schedule-card {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .schedule-head {
+      display: flex; align-items: center; gap: 14px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, var(--p1), var(--p3));
+    }
+    .schedule-head h2 { font-size: 15px; font-weight: 700; color: #fff; }
+    .schedule-head svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .stag {
+      padding: 3px 10px; border-radius: 999px; font-size: 11px;
+      font-weight: 700; letter-spacing: .04em;
+    }
+    .stag-blue   { background: rgba(255,255,255,.18); color: #fff; }
+    .stag-purple { background: rgba(255,255,255,.12); color: rgba(255,255,255,.85); }
+    .lessons-grid { display: flex; flex-direction: column; }
+    .lesson-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 110px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+    .lesson-row:last-child { border-bottom: none; }
+    .lesson-row:hover { background: rgba(79,70,229,.04); }
+    .day-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .day-tab {
+      padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 600;
+      color: var(--gray); background: var(--card); border: 1px solid var(--border);
+      cursor: pointer; transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .day-tab:hover { border-color: var(--p1); color: var(--p1); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .day-tab.active {
+      background: var(--p1); color: #fff; border-color: var(--p1);
+      box-shadow: 0 4px 12px rgba(79,70,229,.25);
+    }
+    .lesson-num {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; width: 52px;
+      font-size: 12px; font-weight: 700; color: var(--gray);
+      border-right: 1px solid var(--border);
+      background: rgba(0,0,0,.02);
+    }
+    .lesson-num span {
+      width: 26px; height: 26px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--border); font-size: 11px;
+    }
+    .lesson-input-wrap { padding: 10px 16px; }
+    .lesson-input {
+      width: 100%; background: transparent; border: none;
+      font-family: var(--font); font-size: 14px; color: var(--dark);
+      padding: 6px 0; outline: none;
+      border-bottom: 1.5px solid transparent; transition: border-color .2s;
+    }
+    .lesson-input:focus { border-bottom-color: var(--p1); }
+    .lesson-input::placeholder { color: var(--gray); font-style: italic; }
+    .lesson-time {
+      padding: 0 12px; font-size: 11px; color: var(--gray);
+      white-space: nowrap; font-family: monospace;
+    }
+    .bottom-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-top: 16px; flex-wrap: wrap; gap: 10px;
+    }
+    .change-count { font-size: 12px; color: var(--gray); }
+    .change-count strong { color: var(--p1); }
+    .schedule-wrapper { position: relative; }
+    .loading-overlay {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,.7);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius); z-index: 10;
+      pointer-events: none; opacity: 0; transition: opacity .25s;
+    }
+    .loading-overlay.visible { opacity: 1; pointer-events: all; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border); border-top-color: var(--p1);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .webhook-row {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      padding: 14px 18px;
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 20px;
+    }
+    .webhook-row label { font-size: 12px; font-weight: 700; color: var(--gray); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+    .webhook-row label svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .webhook-row input {
+      flex: 1; min-width: 260px; padding: 8px 12px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-family: var(--font); font-size: 13px; outline: none;
+    }
+    .webhook-row input:focus { border-color: var(--p1); }
+  </style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="app-layout">
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <button onclick="toggleSidebar()" class="btn btn-ghost btn-sm" id="mobileMenuBtn" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+      <div class="topbar-title" id="topbarTitleEl">Сабақ кестесі</div>
+      <div class="topbar-actions">
+        <div class="avatar" id="topbarAvatar"></div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="webhook-row" id="webhookRow" style="display:none;">
+        <label id="webhookLabel">Webhook URL</label>
+        <input type="text" id="webhookUrl"
+          placeholder="https://asicapital.asia/webhook/bcc9850d-887b-42fe-8ce0-1b647f3866fc">
+        <button class="btn btn-outline btn-sm" onclick="saveWebhook()">Сақтау</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('webhookRow').style.display='none'" id="webhookCloseBtn"></button>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;">Класс</label>
+            <select id="classSelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;outline:none;cursor:pointer;min-width:140px;">
+              <option value="">- таңдаңыз -</option>
+              <option value="7a">7А</option><option value="7b">7Б</option><option value="7c">7В</option>
+              <option value="8a">8А</option><option value="8b">8Б</option><option value="8c">8В</option><option value="8d">8Г</option>
+              <option value="9a">9А</option><option value="9b">9Б</option>
+              <option value="10a">10А</option><option value="10b">10Б</option>
+              <option value="11a">11А</option><option value="11b">11Б</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;">Апта күні</label>
+            <select id="daySelect" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;outline:none;cursor:pointer;min-width:160px;">
+              <option value="">- таңдаңыз -</option>
+              <option value="monday">Понедельник</option>
+              <option value="tuesday">Вторник</option>
+              <option value="wednesday">Среда</option>
+              <option value="thursday">Четверг</option>
+              <option value="friday">Пятница</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="loadSchedule()" id="loadBtn">Жүктеу</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto;"
+            onclick="document.getElementById('webhookRow').style.display='flex'"
+            title="Настроить webhook" id="settingsBtn"></button>
+        </div>
+      </div>
+      <div class="schedule-wrapper">
+        <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+        <div class="schedule-card" id="scheduleCard" style="display:none;">
+          <div class="schedule-head">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+            <h2>Сабақ кестесі</h2>
+            <span class="stag stag-blue" id="tagClass">-</span>
+            <span class="stag stag-purple" id="tagDay">-</span>
+          </div>
+          <div class="lessons-grid" id="lessonsGrid"></div>
+        </div>
+      </div>
+      <div class="bottom-bar" id="bottomBar" style="display:none;">
+        <div class="change-count" id="changeCount">Изменений: <strong>0</strong></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="resetChanges()" id="resetBtn">Отменить</button>
+          <button class="btn btn-primary" onclick="saveSchedule()" id="saveBtn">Дерекқорға сақтау</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
+<script src="../json/data.js"></script>
+<script src="../js/app.js"></script>
+<script>
+const user = Auth.require(['teacher','admin']);
+buildSidebar('schedule', user.role);
+document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+document.getElementById('topbarTitleEl').innerHTML = ICONS.calendar + ' Расписание уроков';
+document.getElementById('webhookLabel').innerHTML = ICONS.link + ' Webhook URL';
+document.getElementById('webhookCloseBtn').innerHTML = ICONS.x;
+document.getElementById('loadBtn').innerHTML = ICONS.arrowDown + ' Загрузить';
+document.getElementById('settingsBtn').innerHTML = ICONS.link;
+document.getElementById('resetBtn').innerHTML = ICONS.arrowRight + ' Сбросить';
+document.getElementById('saveBtn').innerHTML = ICONS.check + ' Сохранить в БД';
+document.getElementById('webhookRow').style.display = 'none';
+const LESSON_TIMES = [
+  '08:00–08:45','08:55–09:40','09:50–10:35',
+  '10:55–11:40','11:50–12:35','12:45–13:30',
+  '13:40–14:25','14:35–15:20','15:30–16:15','16:25–17:10'
+];
+const FIELD_KEYS = [
+  'first_subject','second_subject','third_subject','fourth_subject',
+  'fifth_subject','sixth_subject','seventh_subject','eigthth_subject',
+  'nineth_subject','tenth_subject'
+];
+const DEFAULT_WEBHOOK = 'https://asicapital.asia/webhook/bcc9850d-887b-42fe-8ce0-1b647f3866fc';
+let originalLessons = Array(10).fill('');
+let currentLessons  = Array(10).fill('');
+let changeCount = 0;
+let currentRecord = null;
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('n8n_schedule_webhook') || DEFAULT_WEBHOOK;
+  document.getElementById('webhookUrl').value = saved;
+});
+function saveWebhook() {
+  const url = document.getElementById('webhookUrl').value.trim();
+  if (!url) { toast('Введите URL вебхука', 'error'); return; }
+  localStorage.setItem('n8n_schedule_webhook', url);
+  toast('URL сохранён', 'success');
+}
+function getWebhook() {
+  return document.getElementById('webhookUrl').value.trim()
+      || localStorage.getItem('n8n_schedule_webhook') || DEFAULT_WEBHOOK;
+}
+async function loadSchedule() {
+  const cls     = document.getElementById('classSelect').value;
+  const day     = document.getElementById('daySelect').value;
+  const dayName = document.getElementById('daySelect').selectedOptions[0]?.text || '';
+  if (!cls || !day) { toast('Выберите класс и день недели', 'error'); return; }
+  const wh = getWebhook();
+  setLoading(true);
+  try {
+    const res = await fetch(wh, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get', class: cls, day })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const record = Array.isArray(data) ? data[0] : data;
+    currentRecord = record || null;
+    originalLessons = FIELD_KEYS.map(k => (record && record[k]) ? record[k] : '');
+    currentLessons  = [...originalLessons];
+    renderSchedule(cls, dayName);
+    toast('Расписание загружено', 'success');
+  } catch(e) {
+    toast('Ошибка загрузки: ' + e.message, 'error');
+    currentRecord = null;
+    originalLessons = Array(10).fill('');
+    currentLessons  = Array(10).fill('');
+    renderSchedule(cls, dayName);
+  } finally {
+    setLoading(false);
+  }
+}
+function renderSchedule(cls, dayName) {
+  document.getElementById('tagClass').textContent = cls.toUpperCase();
+  document.getElementById('tagDay').textContent   = dayName;
+  const grid = document.getElementById('lessonsGrid');
+  grid.innerHTML = '';
+  currentLessons.forEach((lesson, i) => {
+    const row = document.createElement('div');
+    row.className = 'lesson-row';
+    row.innerHTML =
+      '<div class="lesson-num"><span>' + (i+1) + '</span></div>' +
+      '<div class="lesson-input-wrap">' +
+        '<input class="lesson-input" type="text" data-index="' + i + '" ' +
+        'placeholder="Урок ' + (i+1) + '…" value="' + escapeHtml(lesson) + '" />' +
+      '</div>' +
+      '<div class="lesson-time">' + LESSON_TIMES[i] + '</div>';
+    grid.appendChild(row);
+  });
+  grid.querySelectorAll('.lesson-input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      currentLessons[parseInt(inp.dataset.index)] = inp.value;
+      recalcChanges();
+    });
+  });
+  document.getElementById('scheduleCard').style.display = '';
+  document.getElementById('bottomBar').style.display    = '';
+  changeCount = 0;
+  updateChangeCount();
+}
+function recalcChanges() {
+  changeCount = currentLessons.filter((l, i) => l !== originalLessons[i]).length;
+  updateChangeCount();
+}
+function updateChangeCount() {
+  document.getElementById('changeCount').innerHTML = 'Изменений: <strong>' + changeCount + '</strong>';
+}
+function resetChanges() {
+  currentLessons = [...originalLessons];
+  document.querySelectorAll('.lesson-input').forEach((inp, i) => { inp.value = originalLessons[i]; });
+  changeCount = 0;
+  updateChangeCount();
+  toast('Изменения сброшены', 'info');
+}
+async function saveSchedule() {
+  const cls = document.getElementById('classSelect').value;
+  const day = document.getElementById('daySelect').value;
+  if (!cls || !day)   { toast('Класс / день не выбраны', 'error'); return; }
+  if (changeCount === 0) { toast('Нет изменений для сохранения', 'info'); return; }
+  setLoading(true);
+  const payload = { action: 'set', class: cls, day };
+  FIELD_KEYS.forEach((k, i) => { payload[k] = currentLessons[i]; });
+  if (currentRecord?.id) payload.id = currentRecord.id;
+  try {
+    const res = await fetch(getWebhook(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    originalLessons = [...currentLessons];
+    changeCount = 0;
+    updateChangeCount();
+    toast('Расписание сохранено в БД', 'success');
+  } catch(e) {
+    toast('Ошибка сохранения: ' + e.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+function setLoading(on) {
+  document.getElementById('loadingOverlay').classList.toggle('visible', on);
+}
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

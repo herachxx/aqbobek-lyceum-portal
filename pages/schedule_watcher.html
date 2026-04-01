@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Моё расписание - Aqbobek Lyceum</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .schedule-card {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .schedule-head {
+      display: flex; align-items: center; gap: 14px;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, var(--p1), var(--p3));
+    }
+    .schedule-head h2 { font-size: 15px; font-weight: 700; color: #fff; }
+    .schedule-head svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .stag {
+      padding: 3px 10px; border-radius: 999px; font-size: 11px;
+      font-weight: 700; letter-spacing: .04em;
+    }
+    .stag-blue   { background: rgba(255,255,255,.18); color: #fff; }
+    .stag-purple { background: rgba(255,255,255,.12); color: rgba(255,255,255,.85); }
+    .day-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .day-tab {
+      padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 600;
+      color: var(--gray); background: var(--card); border: 1px solid var(--border);
+      cursor: pointer; transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .day-tab:hover { border-color: var(--p1); color: var(--p1); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .day-tab.active {
+      background: var(--p1); color: #fff; border-color: var(--p1);
+      box-shadow: 0 4px 12px rgba(79,70,229,.25);
+    }
+    .day-tab.today-tab { border-color: var(--p3); }
+    .day-tab.today-tab:not(.active) { color: var(--p1); }
+    .lessons-grid { display: flex; flex-direction: column; }
+    .lesson-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 110px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+    .lesson-row:last-child { border-bottom: none; }
+    .lesson-row:hover { background: rgba(79,70,229,.04); }
+    .lesson-row.empty-lesson { opacity: .45; }
+    .lesson-num {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; width: 52px;
+      font-size: 12px; font-weight: 700; color: var(--gray);
+      border-right: 1px solid var(--border);
+      background: rgba(0,0,0,.02);
+    }
+    .lesson-num span {
+      width: 26px; height: 26px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--border); font-size: 11px;
+    }
+    .lesson-name-wrap { padding: 12px 16px; }
+    .lesson-name { font-size: 14px; color: var(--dark); font-weight: 500; }
+    .lesson-name.empty { color: var(--gray); font-style: italic; font-weight: 400; }
+    .lesson-time {
+      padding: 0 12px; font-size: 11px; color: var(--gray);
+      white-space: nowrap; font-family: monospace;
+    }
+    .schedule-wrapper { position: relative; }
+    .loading-overlay {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,.7);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius); z-index: 10;
+      pointer-events: none; opacity: 0; transition: opacity .25s;
+    }
+    .loading-overlay.visible { opacity: 1; pointer-events: all; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border); border-top-color: var(--p1);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 12px;
+      padding: 60px 24px; color: var(--gray); text-align: center;
+    }
+    .empty-state .empty-icon { display: flex; align-items: center; justify-content: center; color: var(--gray); }
+    .empty-state .empty-icon svg { width: 36px; height: 36px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+    .empty-state p { font-size: 14px; }
+    .info-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px;
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-top: 16px;
+      font-size: 12px; color: var(--gray);
+    }
+    .info-bar svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+    .info-bar strong { color: var(--dark); }
+    .child-banner {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
+      background: rgba(79,70,229,.07);
+      border: 1px solid rgba(79,70,229,.2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      font-size: 13px; color: var(--dark);
+    }
+    .child-banner .cicon { display: flex; align-items: center; color: var(--p1); }
+    .child-banner .cicon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .child-banner strong { color: var(--p1); }
+  </style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="app-layout">
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <button onclick="toggleSidebar()" class="btn btn-ghost btn-sm" id="mobileMenuBtn" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+      <div class="topbar-title" id="topbarTitleEl">Менің кестем</div>
+      <div class="topbar-actions">
+        <div class="avatar" id="topbarAvatar"></div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="child-banner" id="childBanner" style="display:none;">
+        <span class="cicon" id="childIcon"></span>
+        <div>Ьаланың сабақ кестесі: <strong id="childName">-</strong> &nbsp;·&nbsp; Класс: <strong id="childGrade">-</strong></div>
+      </div>
+
+      <div class="day-tabs" id="dayTabs"></div>
+
+      <div class="schedule-wrapper">
+        <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+        <div class="schedule-card" id="scheduleCard">
+          <div class="schedule-head">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+            <h2>Сабақ кестесі</h2>
+            <span class="stag stag-blue" id="tagClass">-</span>
+            <span class="stag stag-purple" id="tagDay">-</span>
+          </div>
+          <div class="lessons-grid" id="lessonsGrid">
+            <div class="empty-state">
+              <span class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></span>
+              <p>Жоғарыдан аптаның күнін таңдаңыз</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="info-bar" id="infoBar" style="display:none;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+        <strong id="infoClass">-</strong> сыныбының кестесі · дерекқордан жаңартылды
+      </div>
+
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
+<script src="../json/data.js"></script>
+<script src="../js/app.js"></script>
+<script>
+const user = Auth.require(['student', 'parent']);
+buildSidebar('schedule', user.role);
+document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+document.getElementById('topbarTitleEl').innerHTML = ICONS.calendar + ' Моё расписание';
+document.getElementById('childIcon').innerHTML = ICONS.user;
+const LESSON_TIMES = [
+  '08:00–08:45','08:55–09:40','09:50–10:35',
+  '10:55–11:40','11:50–12:35','12:45–13:30',
+  '13:40–14:25','14:35–15:20','15:30–16:15','16:25–17:10'
+];
+const FIELD_KEYS = [
+  'first_subject','second_subject','third_subject','fourth_subject',
+  'fifth_subject','sixth_subject','seventh_subject','eigthth_subject',
+  'nineth_subject','tenth_subject'
+];
+const DAYS = [
+  { key: 'monday',    label: 'Пн', full: 'Понедельник' },
+  { key: 'tuesday',   label: 'Вт', full: 'Вторник'     },
+  { key: 'wednesday', label: 'Ср', full: 'Среда'        },
+  { key: 'thursday',  label: 'Чт', full: 'Четверг'      },
+  { key: 'friday',    label: 'Пт', full: 'Пятница'      },
+];
+const SCHEDULE_WEBHOOK = 'https://asicapital.asia/webhook/bcc9850d-887b-42fe-8ce0-1b647f3866fc';
+function normalizeGrade(grade) {
+  if (!grade) return '';
+  const map = {
+    'А':'a','A':'a','а':'a',
+    'Б':'b','B':'b','б':'b',
+    'В':'c','C':'c','в':'c',
+    'Г':'d','D':'d','г':'d'
+  };
+  return grade.replace(/[А-ЯA-Za-zа-я]/g, ch => map[ch] || ch.toLowerCase()).toLowerCase();
+}
+let studentClass = '';
+let displayGrade  = '';
+if (user.role === 'student') {
+  studentClass = normalizeGrade(user.grade);
+  displayGrade  = user.grade || '-';
+  initPage();
+} else if (user.role === 'parent') {
+  function tryResolveChild() {
+    const data = window.LYCEUM_DATA;
+    if (!data) return false;
+    const child = data.students.find(s => s.id === user.childId);
+    if (child) {
+      studentClass = normalizeGrade(child.grade);
+      displayGrade  = child.grade || '-';
+      document.getElementById('childBanner').style.display = 'flex';
+      document.getElementById('childName').textContent   = child.fullname || '-';
+      document.getElementById('childGrade').textContent  = displayGrade.toUpperCase();
+    } else {
+      toast('Ребёнок не найден (childId: ' + user.childId + ')', 'error');
+    }
+    initPage();
+    return true;
+  }
+  if (!tryResolveChild()) {
+    const interval = setInterval(() => {
+      if (tryResolveChild()) clearInterval(interval);
+    }, 100);
+  }
+}
+function initPage() {
+  document.getElementById('tagClass').textContent  = displayGrade.toUpperCase();
+  document.getElementById('infoClass').textContent = displayGrade.toUpperCase();
+  buildTabs();
+  const todayKey  = getTodayKey();
+  const todayFull = DAYS.find(d => d.key === todayKey)?.full || 'Понедельник';
+  selectDay(todayKey, todayFull);
+}
+function getTodayKey() {
+  const map = [null,'monday','tuesday','wednesday','thursday','friday','saturday'];
+  return map[new Date().getDay()] || 'monday';
+}
+function buildTabs() {
+  const todayKey = getTodayKey();
+  const container = document.getElementById('dayTabs');
+  container.innerHTML = '';
+  DAYS.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'day-tab' + (d.key === todayKey ? ' today-tab' : '');
+    btn.textContent = d.label + (d.key === todayKey ? ' ·сегодня' : '');
+    btn.dataset.key  = d.key;
+    btn.dataset.full = d.full;
+    btn.addEventListener('click', () => selectDay(d.key, d.full));
+    container.appendChild(btn);
+  });
+}
+function selectDay(key, fullName) {
+  document.querySelectorAll('.day-tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.key === key)
+  );
+  loadSchedule(key, fullName);
+}
+async function loadSchedule(day, dayName) {
+  if (!studentClass) { toast('Класс не определён', 'error'); return; }
+  setLoading(true);
+  try {
+    const res = await fetch(SCHEDULE_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get', class: studentClass, day })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data   = await res.json();
+    const record = Array.isArray(data) ? data[0] : data;
+    const lessons = FIELD_KEYS.map(k => (record && record[k]) ? record[k] : '');
+    renderSchedule(dayName, lessons);
+    document.getElementById('infoBar').style.display = 'flex';
+  } catch(e) {
+    toast('Ошибка загрузки: ' + e.message, 'error');
+    renderSchedule(dayName, Array(10).fill(''));
+  } finally {
+    setLoading(false);
+  }
+}
+function renderSchedule(dayName, lessons) {
+  document.getElementById('tagDay').textContent = dayName;
+  const grid = document.getElementById('lessonsGrid');
+  grid.innerHTML = '';
+  let lastFilled = -1;
+  lessons.forEach((l, i) => { if (l.trim()) lastFilled = i; });
+  if (lastFilled === -1) {
+    grid.innerHTML = '<div class="empty-state"><span class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><p>Уроков в этот день нет</p></div>';
+    return;
+  }
+  lessons.slice(0, lastFilled + 1).forEach((lesson, i) => {
+    const isEmpty = !lesson.trim();
+    const row = document.createElement('div');
+    row.className = 'lesson-row' + (isEmpty ? ' empty-lesson' : '');
+    row.innerHTML =
+      '<div class="lesson-num"><span>' + (i + 1) + '</span></div>' +
+      '<div class="lesson-name-wrap">' +
+        '<div class="lesson-name' + (isEmpty ? ' empty' : '') + '">' +
+          (isEmpty ? 'Нет урока' : escapeHtml(lesson)) +
+        '</div>' +
+      '</div>' +
+      '<div class="lesson-time">' + LESSON_TIMES[i] + '</div>';
+    grid.appendChild(row);
+  });
+}
+function setLoading(on) {
+  document.getElementById('loadingOverlay').classList.toggle('visible', on);
+}
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
