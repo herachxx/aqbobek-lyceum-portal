@@ -169,7 +169,7 @@ function buildSidebar(activeId, role) {
     teacher: [
       { id: 'dashboard', icon: ICONS.home, label: 'Негізгі бет', href: 'dashboard.html' },
       { id: 'grades', icon: ICONS.barChart, label: 'Бағалар (сынып)', href: 'teacher-grades.html' },
-      { id: 'rate student', icon: ICONS.gradebook, label: 'Баға қою', href: 'rating.html' },
+      { id: 'rate student', icon: ICONS.gradeBook, label: 'Баға қою', href: 'rating.html' },
       { id: 'schedule', icon: ICONS.calendar, label: 'Расписание', href: 'schedule.html' },
       { id: 'achievements', icon: ICONS.trophy, label: 'Жетістіктер', href: 'achievements.html' },
       { id: 'events', icon: ICONS.calendar, label: 'Іс-шаралар', href: 'events.html' },
