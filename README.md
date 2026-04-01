@@ -344,7 +344,7 @@ project/
 
 <div align="center">
 
-*© 2026 Ақбөбек Лицейі - Unified Portal · Hackathon Project*
+*© 2026 Aqbobek Lyceum - Unified Portal · Hackathon Project*
 
 [![Made with ❤️ in Aktobe](https://img.shields.io/badge/Made_with_%E2%9D%A4%EF%B8%8F_in-Aktobe-ff69b4?style=flat-square)]()
 
