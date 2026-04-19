@@ -1,3 +1,26 @@
+// ─── THEME MANAGER ────────────────────────────────────────────────
+const MOON_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const SUN_ICON  = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+const ThemeManager = {
+  get() { return localStorage.getItem('lyceum_theme') || 'light'; },
+  apply(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
+  },
+  toggle() {
+    const next = this.get() === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('lyceum_theme', next);
+    this.apply(next);
+  },
+  init() {
+    this.apply(this.get());
+    // re-apply after sidebar renders
+    setTimeout(() => this.apply(this.get()), 50);
+  }
+};
+ThemeManager.init();
+
 const ICONS = {
   home:        '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
   barChart:    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>',
@@ -171,6 +194,7 @@ function buildSidebar(activeId, role) {
       { id: 'grades', icon: ICONS.barChart, label: 'Бағалар (сынып)', href: 'teacher-grades.html' },
       { id: 'rate student', icon: ICONS.gradeBook, label: 'Баға қою', href: 'rating.html' },
       { id: 'schedule', icon: ICONS.calendar, label: 'Расписание', href: 'schedule.html' },
+      { id: 'staff-schedule', icon: ICONS.users, label: 'Персонал — расписание', href: 'staff-schedule.html' },
       { id: 'achievements', icon: ICONS.trophy, label: 'Жетістіктер', href: 'achievements.html' },
       { id: 'events', icon: ICONS.calendar, label: 'Іс-шаралар', href: 'events.html' },
       { id: 'risk', icon: ICONS.alertTriangle, label: 'Тәуекел аймағы', href: 'risk-zone.html' },
@@ -187,7 +211,9 @@ function buildSidebar(activeId, role) {
     ],
     admin: [
       { id: 'dashboard', icon: ICONS.home, label: 'Негізгі бет', href: 'dashboard.html' },
+      { id: 'tasks', icon: ICONS.target, label: '🎯 Командный центр', href: 'tasks.html' },
       { id: 'schedule', icon: ICONS.calendar, label: 'Расписание', href: 'schedule.html' },
+      { id: 'staff-schedule', icon: ICONS.users, label: 'Персонал — расписание', href: 'staff-schedule.html' },
       { id: 'rate student', icon: '🗓️', label: 'Оценивание', href: 'rating.html' },
       { id: 'events', icon: ICONS.calendar, label: 'Іс-шаралар', href: 'events.html' },
       { id: 'ranking', icon: ICONS.medal, label: 'Жалпы рейтинг', href: 'ranking.html' },
@@ -204,13 +230,16 @@ function buildSidebar(activeId, role) {
   `).join('');
   const sidebarHTML = `
     <div class="sidebar" id="appSidebar">
-      <div class="sidebar-logo">
+      <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" onclick="toggleSidebarCollapse()" title="Свернуть меню">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <a class="sidebar-logo" href="../index.html" style="text-decoration:none;cursor:pointer;">
         <img src="https://a1s.kz/Logo_Lyc.png" alt="logo" style="width:36px;height:36px;border-radius:8px;object-fit:cover;" onerror="this.style.display='none'">
         <div class="sidebar-logo-text">
           <strong>Ақбөбек</strong>
           <span>Unified Portal</span>
         </div>
-      </div>
+      </a>
       <nav class="sidebar-nav">
         <div class="nav-section-label">Мәзір</div>
         ${itemsHTML}
@@ -221,18 +250,27 @@ function buildSidebar(activeId, role) {
         </a>
       </nav>
       <div class="sidebar-footer">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;" data-hide-collapsed>
+          <span style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.06em;text-transform:uppercase;">Тема</span>
+          <button class="theme-toggle" id="themeToggleBtn" onclick="ThemeManager.toggle()" title="Тема ауыстыру"></button>
+        </div>
         <div class="sidebar-user">
           <div class="avatar" style="width:36px;height:36px;font-size:13px;">${initials(user.fullname || user.login)}</div>
           <div class="sidebar-user-info">
             <strong>${(user.fullname || user.login).split(' ')[0]}</strong>
             <span>${roleLabel(user.role)}</span>
           </div>
-          <button onclick="Auth.logout()" class="btn btn-ghost btn-sm" style="margin-left:auto" title="Шығу">${ICONS.logOut}</button>
+          <button onclick="Auth.logout()" class="btn btn-ghost btn-sm" style="margin-left:auto" title="Шығу" data-hide-collapsed>${ICONS.logOut}</button>
         </div>
       </div>
     </div>
   `;
   document.getElementById('sidebar-placeholder').innerHTML = sidebarHTML;
+
+  // Restore collapsed state
+  const isCollapsed = localStorage.getItem('sidebar_collapsed') === '1';
+  if (isCollapsed) _applySidebarCollapse(true);
+
   const mobileBtn = document.getElementById('mobileMenuBtn');
   if (mobileBtn) {
     if (window.innerWidth < 1024) mobileBtn.style.display = 'flex';
@@ -250,6 +288,25 @@ function toggleSidebar() {
   const overlay = document.getElementById('sidebarOverlay');
   if (sidebar) sidebar.classList.toggle('open');
   if (overlay) overlay.classList.toggle('visible');
+}
+function _applySidebarCollapse(collapsed) {
+  const sidebar = document.getElementById('appSidebar');
+  const main = document.querySelector('.main-content');
+  if (!sidebar) return;
+  if (collapsed) {
+    sidebar.classList.add('collapsed');
+    if (main) main.classList.add('expanded');
+  } else {
+    sidebar.classList.remove('collapsed');
+    if (main) main.classList.remove('expanded');
+  }
+}
+function toggleSidebarCollapse() {
+  const sidebar = document.getElementById('appSidebar');
+  if (!sidebar) return;
+  const nowCollapsed = sidebar.classList.contains('collapsed');
+  _applySidebarCollapse(!nowCollapsed);
+  localStorage.setItem('sidebar_collapsed', !nowCollapsed ? '1' : '0');
 }
 function closeSidebar() {
   const sidebar = document.getElementById('appSidebar');
