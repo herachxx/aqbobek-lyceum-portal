@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Рейтинг - Aqbobek Lyceum</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="app-layout">
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <button onclick="toggleSidebar()" class="btn btn-ghost btn-sm" id="mobileMenuBtn" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+      <div class="topbar-title" id="topbarTitleEl">Оқушылар рейтингі</div>
+      <div class="topbar-actions">
+        <div class="avatar" id="topbarAvatar"></div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:20px;margin-bottom:40px;padding:32px;">
+        <div id="rank2" style="text-align:center;"></div>
+        <div id="rank1" style="text-align:center;"></div>
+        <div id="rank3" style="text-align:center;"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:16px;">Толық рейтинг кестесі</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Марапат</th>
+                <th>Орын</th>
+                <th>Аты-жөні</th>
+                <th>Сынып</th>
+                <th>GPA</th>
+                <th>Жетістіктер</th>
+              </tr>
+            </thead>
+            <tbody id="rankingBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
+<script src="../json/data.js"></script>
+<script src="../js/app.js"></script>
+<script>
+(async () => {
+  await initData();
+  const user = Auth.require();
+  buildSidebar('ranking', user.role);
+  document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+  document.getElementById('topbarTitleEl').innerHTML = ICONS.medal + ' Оқушылар рейтингі';
+  const lb = LYCEUM_DATA.leaderboard;
+  function podiumCard(entry, height, highlight) {
+    return `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div style="font-size:${highlight ? 18 : 14}px;font-weight:800;color:${highlight ? 'var(--p1)' : 'var(--gray)'}">${entry.badge}</div>
+        <div class="avatar ${highlight ? 'avatar-xl' : 'avatar-lg'}">${initials(entry.name)}</div>
+        <div style="font-weight:700;font-size:${highlight ? 15 : 13}px;max-width:120px;text-align:center;color:var(--dark)">${entry.name}</div>
+        <div class="badge badge-purple">${entry.grade}</div>
+        <div style="font-size:${highlight ? 22 : 18}px;color:var(--p1);font-weight:800;">${entry.gpa}</div>
+        <div style="width:80px;height:${height}px;background:${highlight?'var(--p1)':'var(--border)'};border-radius:8px 8px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;color:${highlight?'#fff':'var(--gray)'};font-weight:700;font-size:${highlight?18:14}px">#${entry.rank}</div>
+      </div>
+    `;
+  }
+  document.getElementById('rank1').innerHTML = podiumCard(lb[0], 100, true);
+  document.getElementById('rank2').innerHTML = podiumCard(lb[1], 70, false);
+  document.getElementById('rank3').innerHTML = podiumCard(lb[2], 50, false);
+  const tbody = document.getElementById('rankingBody');
+  lb.forEach(entry => {
+    const isMe = user.fullname && entry.name.includes(user.fullname.split(' ')[0]);
+    tbody.innerHTML += `
+      <tr style="${isMe ? 'background:rgba(79,70,229,0.08);' : ''}">
+        <td style="font-size:16px;font-weight:700;">${entry.badge}</td>
+        <td><strong style="color:var(--dark)">#${entry.rank}</strong></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="avatar" style="width:32px;height:32px;font-size:11px;${isMe?'background:var(--p1)':''}">${initials(entry.name)}</div>
+            <span style="font-weight:600;color:var(--dark)">${entry.name}${isMe ? ' <span class="badge badge-purple" style="margin-left:4px">Сіз</span>' : ''}</span>
+          </div>
+        </td>
+        <td><span class="badge badge-purple">${entry.grade}</span></td>
+        <td><strong style="color:var(--p1);font-size:16px">${entry.gpa}</strong></td>
+        <td style="color:var(--dark)">${entry.achievements} жетістік</td>
+      </tr>
+    `;
+  });
+})();
+</script>
+</body>
+</html>

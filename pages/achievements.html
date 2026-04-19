@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <link rel="icon" type="image/png" href="../website-icon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Жетістіктер - Aqbobek Lyceum</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="app-layout">
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <button onclick="toggleSidebar()" class="btn btn-ghost btn-sm" id="mobileMenuBtn" style="display:none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
+      <div class="topbar-title" id="topbarTitleEl">Жетістіктер</div>
+      <div class="topbar-actions">
+        <div class="avatar" id="topbarAvatar"></div>
+      </div>
+    </div>
+    <div class="page-content">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <h3>Менің жетістіктерім</h3>
+          <span id="achCount" class="badge badge-purple"></span>
+        </div>
+        <div id="myAchievements" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;"></div>
+      </div>
+      <div class="card">
+        <div class="section-header">
+          <h3>Мектеп жетістіктері - Топ оқушылар</h3>
+        </div>
+        <div id="schoolAchievements" style="display:flex;flex-direction:column;gap:12px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="../json/decoder.js"></script>
+<script src="../json/data.js"></script>
+<script src="../js/app.js"></script>
+<script>
+(async () => {
+  await initData();
+  const user = Auth.require();
+  buildSidebar('achievements', user.role);
+  document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+  document.getElementById('topbarTitleEl').innerHTML = ICONS.trophy + ' Жетістіктер';
+  let student;
+  if (user.role === 'student') {
+    student = LYCEUM_DATA.students.find(s => s.id === user.id);
+  } else if (user.role === 'parent') {
+    const parent = LYCEUM_DATA.parents.find(p => p.id === user.id);
+    student = LYCEUM_DATA.students.find(s => s.id === parent?.childId);
+  }
+  const myDiv = document.getElementById('myAchievements');
+  const myAchs = student?.achievements || [];
+  document.getElementById('achCount').textContent = `${myAchs.length} жетістік`;
+  if (myAchs.length) {
+    const placeColors = {1:'var(--gold)',2:'#9ca3af',3:'#cd7f32'};
+    myAchs.forEach(a => {
+      myDiv.innerHTML += `
+        <div class="card card-hover" style="padding:20px;">
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <div class="ach-emoji">${ICONS.trophy}</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:15px;margin-bottom:4px;">${a.title}</div>
+              <div style="font-size:13px;color:var(--gray);margin-bottom:10px;">${a.year}</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="badge" style="background:${placeColors[a.place]}22;color:${placeColors[a.place]}">${a.place}-орын</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    myDiv.innerHTML = '<div class="text-gray" style="grid-column:span 2;text-align:center;padding:40px;">Жетістіктер жоқ. Олимпиада немесе іс-шараға қатысыңыз!</div>';
+  }
+  const schoolDiv = document.getElementById('schoolAchievements');
+  LYCEUM_DATA.students
+    .filter(s => s.achievements?.length > 0)
+    .sort((a, b) => b.achievements.length - a.achievements.length)
+    .forEach(s => {
+      schoolDiv.innerHTML += `
+        <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--cream);border-radius:var(--radius);border:1px solid var(--border);">
+          <div class="avatar avatar-lg">${initials(s.fullname)}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:15px;margin-bottom:2px;">${s.fullname}</div>
+            <div style="font-size:12px;color:var(--gray);margin-bottom:8px;">${s.grade} · ${s.achievements.length} жетістік</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              ${s.achievements.map(a => `<span class="badge badge-gold">${a.title.length > 30 ? a.title.slice(0,30)+'…' : a.title}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+})();
+</script>
+</body>
+</html>
