@@ -244,7 +244,7 @@ function buildSidebar(activeId, role) {
         <div class="nav-section-label">Мәзір</div>
         ${itemsHTML}
         <div class="nav-section-label" style="margin-top:auto">Сілтемелер</div>
-        <a class="nav-item" href="../index.html">
+        <a class="nav-item" href="https://a1s.kz/">
           <span class="nav-icon">${ICONS.globe}</span>
           <span>Лицей сайты</span>
         </a>
