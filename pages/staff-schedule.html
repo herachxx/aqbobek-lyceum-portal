@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Расписание персонала — Aqbobek Lyceum</title>
+  <link rel="icon" type="image/png" href="../website-icon.png">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    :root {
+      --slot-h: 72px;
+      --time-w: 70px;
+    }
+    .role-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+    .role-tab {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 600;
+      color: var(--gray); background: var(--card); border: 1.5px solid var(--border);
+      cursor: pointer; transition: all .2s cubic-bezier(0.4,0,0.2,1);
+    }
+    .role-tab:hover { border-color: var(--p1); color: var(--p1); transform: translateY(-2px); }
+    .role-tab.active { color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+    .role-tab .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: .7; }
+    .role-tab-teacher.active    { background: linear-gradient(135deg, #4f46e5, #6366f1); }
+    .role-tab-maintenance.active{ background: linear-gradient(135deg, #059669, #10b981); }
+    .role-tab-director.active   { background: linear-gradient(135deg, #d97706, #f59e0b); }
+    .role-tab-admin.active      { background: linear-gradient(135deg, #dc2626, #ef4444); }
+
+    .sched-outer {
+      display: grid; grid-template-columns: var(--time-w) 1fr;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; background: var(--card);
+    }
+    .sched-timeline { display: flex; flex-direction: column; }
+    .sched-timeline-cell {
+      height: var(--slot-h); display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start; padding-top: 10px;
+      border-bottom: 1px solid var(--border); background: var(--cream);
+    }
+    .sched-timeline-cell:last-child { border-bottom: none; }
+    .time-label { font-size: 11px; font-weight: 700; color: var(--p1); font-family: 'SF Mono','Fira Code',monospace; }
+    .time-end   { font-size: 9px; color: var(--gray); margin-top: 2px; }
+
+    .sched-slots { display: flex; flex-direction: column; position: relative; }
+    .sched-slot {
+      height: var(--slot-h); display: flex; align-items: center;
+      padding: 6px 12px; border-bottom: 1px solid var(--border);
+      gap: 8px; position: relative;
+    }
+    .sched-slot:last-child { border-bottom: none; }
+    .sched-slot:hover { background: rgba(79,70,229,.03); }
+
+    .slot-card {
+      flex: 1; border-radius: 10px; padding: 8px 12px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; font-weight: 600; line-height: 1.3;
+      position: relative; overflow: hidden;
+      border: 1.5px solid transparent; cursor: pointer;
+      transition: all .2s; min-height: 54px;
+    }
+    .slot-card:hover { transform: translateX(3px); box-shadow: var(--shadow); }
+    .slot-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 4px; border-radius: 4px 0 0 4px;
+    }
+    .slot-lesson     { background: rgba(79,70,229,.08);  border-color: rgba(79,70,229,.15);  color: #3730a3; }
+    .slot-lesson::before { background: #4f46e5; }
+    .slot-break      { background: rgba(100,116,139,.06); border-color: rgba(100,116,139,.12); color: var(--gray); }
+    .slot-break::before { background: var(--gray); }
+    .slot-duty       { background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.2);  color: #92400e; }
+    .slot-duty::before { background: #f59e0b; }
+    .slot-lunch      { background: rgba(16,185,129,.08);  border-color: rgba(16,185,129,.2);  color: #065f46; }
+    .slot-lunch::before { background: #10b981; }
+    .slot-meeting    { background: rgba(139,92,246,.08); border-color: rgba(139,92,246,.2);  color: #5b21b6; }
+    .slot-meeting::before { background: #8b5cf6; }
+    .slot-check      { background: rgba(59,130,246,.08);  border-color: rgba(59,130,246,.2);  color: #1e40af; }
+    .slot-check::before { background: #3b82f6; }
+    .slot-repair     { background: rgba(239,68,68,.08);   border-color: rgba(239,68,68,.2);   color: #991b1b; }
+    .slot-repair::before { background: #ef4444; }
+    .slot-inspection { background: rgba(234,179,8,.08);  border-color: rgba(234,179,8,.2);   color: #713f12; }
+    .slot-inspection::before { background: #eab308; }
+    .slot-free       { background: transparent; border-color: var(--border); border-style: dashed; color: var(--gray); font-style: italic; }
+    .slot-free::before { background: var(--border); }
+    .slot-visit      { background: rgba(168,85,247,.08);  border-color: rgba(168,85,247,.2);  color: #581c87; }
+    .slot-visit::before { background: #a855f7; }
+    .slot-conflict   { background: rgba(239,68,68,.12);   border-color: rgba(239,68,68,.5);   color: #991b1b; animation: pulse-conflict 1.5s ease-in-out infinite; }
+    .slot-conflict::before { background: #ef4444; }
+
+    /* ── Прогулка ───────────────────────────────────────── */
+    .slot-walk { background: rgba(34,197,94,.07); border-color: rgba(34,197,94,.2); color: #16a34a; }
+    .slot-walk::before { background: #22c55e; }
+    .sched-slot.is-walk { pointer-events: none; }
+
+    @keyframes pulse-conflict {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.3); }
+      50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+    }
+
+    .slot-icon { font-size: 18px; flex-shrink: 0; }
+    .slot-text { flex: 1; }
+    .slot-title { font-weight: 700; font-size: 13px; }
+    .slot-sub   { font-size: 11px; font-weight: 500; opacity: .75; margin-top: 1px; }
+    .slot-ai-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 7px; border-radius: 100px;
+      font-size: 10px; font-weight: 700; letter-spacing: .03em;
+      background: rgba(99,102,241,.15); color: #4f46e5;
+      border: 1px solid rgba(99,102,241,.25); flex-shrink: 0;
+    }
+
+    .conflict-panel {
+      background: rgba(239,68,68,.06); border: 1.5px solid rgba(239,68,68,.25);
+      border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; display: none;
+    }
+    .conflict-panel.visible { display: block; }
+    .conflict-panel-title {
+      font-size: 13px; font-weight: 700; color: #991b1b;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    }
+    .conflict-item {
+      font-size: 12px; color: #b91c1c; padding: 6px 10px;
+      background: rgba(239,68,68,.08); border-radius: 8px; margin-top: 6px;
+    }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: var(--card); border-radius: 20px; padding: 28px;
+      width: 520px; max-width: 95vw; box-shadow: var(--shadow-xl);
+      transform: translateY(20px); transition: transform .2s; border: 1px solid var(--border);
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--dark); }
+    .modal-sub   { font-size: 13px; color: var(--gray); margin-bottom: 16px; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px; width: 32px; height: 32px;
+      border-radius: 8px; background: var(--cream); border: 1px solid var(--border);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: var(--gray); font-size: 16px;
+    }
+    .modal-close:hover { color: var(--dark); }
+    /* ── EDIT MODAL ──────────────────────────────────────── */
+    .edit-input-wrap { position: relative; margin-bottom: 12px; }
+    .edit-input {
+      width: 100%; box-sizing: border-box;
+      padding: 12px 44px 12px 14px;
+      border: 1.5px solid var(--border); border-radius: 12px;
+      font-family: var(--font); font-size: 14px; color: var(--dark);
+      background: var(--cream); outline: none; resize: none;
+      transition: border-color .2s; line-height: 1.5;
+    }
+    .edit-input:focus { border-color: var(--p1); }
+    .edit-send-btn {
+      position: absolute; right: 10px; bottom: 10px;
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--p1); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; transition: opacity .2s;
+    }
+    .edit-send-btn:disabled { opacity: .4; cursor: default; }
+    .edit-preview { background: var(--cream); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; font-size: 13px; display: none; }
+    .edit-preview.visible { display: block; }
+    .edit-preview-label { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .edit-preview-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--card); }
+    .edit-ai-spinner { display: none; align-items: center; gap: 8px; font-size: 13px; color: var(--gray); padding: 6px 0; }
+    .edit-ai-spinner.visible { display: flex; }
+    .edit-ai-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--p1); animation: ai-bounce .8s ease-in-out infinite; }
+    .edit-ai-dot:nth-child(2) { animation-delay: .15s; }
+    .edit-ai-dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes ai-bounce { 0%,100%{transform:translateY(0);opacity:.4} 50%{transform:translateY(-4px);opacity:1} }
+    .clear-slot-btn { font-size: 12px; color: #ef4444; background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; }
+    .clear-slot-btn:hover { color: #b91c1c; }
+
+    .sched-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px; margin-bottom: 20px;
+    }
+    .sched-stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px; text-align: center;
+    }
+    .sched-stat-num { font-size: 22px; font-weight: 800; color: var(--p1); letter-spacing: -0.02em; }
+    .sched-stat-lbl { font-size: 11px; color: var(--gray); font-weight: 600; margin-top: 2px; }
+
+    .person-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px; margin-bottom: 20px;
+    }
+    .person-card {
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+      border-radius: 12px; border: 1.5px solid var(--border); background: var(--card);
+      cursor: pointer; transition: all .2s; font-size: 13px;
+    }
+    .person-card:hover { border-color: var(--p1); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .person-card.selected { border-color: var(--p1); background: rgba(79,70,229,.06); }
+    .person-avatar {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0;
+    }
+    .person-card.absent { border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.04); }
+    .person-card.absent:hover { border-color: #ef4444; }
+    .person-card.absent.selected { border-color: #ef4444; background: rgba(239,68,68,.1); }
+
+    .day-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .day-tab {
+      padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      color: var(--gray); background: var(--card); border: 1px solid var(--border);
+      cursor: pointer; transition: all .2s;
+    }
+    .day-tab:hover { border-color: var(--p1); color: var(--p1); }
+    .day-tab.active { background: var(--p1); color: #fff; border-color: var(--p1); box-shadow: 0 4px 12px rgba(79,70,229,.25); }
+
+    [data-theme="dark"] .slot-lesson    { color: #a5b4fc; }
+    [data-theme="dark"] .slot-duty      { color: #fcd34d; }
+    [data-theme="dark"] .slot-lunch     { color: #6ee7b7; }
+    [data-theme="dark"] .slot-meeting   { color: #c4b5fd; }
+    [data-theme="dark"] .slot-check     { color: #93c5fd; }
+    [data-theme="dark"] .slot-repair    { color: #fca5a5; }
+    [data-theme="dark"] .slot-visit     { color: #e9d5ff; }
+    [data-theme="dark"] .slot-conflict  { color: #fca5a5; }
+    [data-theme="dark"] .slot-walk      { color: #86efac; }
+    [data-theme="dark"] .sched-timeline-cell { background: rgba(255,255,255,.02); }
+  </style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="app-layout">
+  <div id="sidebar-placeholder"></div>
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="toggleSidebar()" class="btn btn-ghost btn-sm" id="mobileMenuBtn" style="display:none">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+        </button>
+        <div class="topbar-title" id="topbarTitle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Расписание персонала
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span id="topbarDate" style="font-size:12px;color:var(--gray)"></span>
+        <div class="avatar" id="topbarAvatar"></div>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <div class="conflict-panel" id="conflictPanel">
+        <div class="conflict-panel-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          ИИ обнаружил конфликты в расписании
+        </div>
+        <div id="conflictList"></div>
+      </div>
+
+      <div class="role-tabs" id="roleTabs">
+        <button class="role-tab role-tab-teacher active" data-role="teacher" onclick="selectRole('teacher', this)">
+          <div class="dot"></div> Учителя
+        </button>
+        <button class="role-tab role-tab-maintenance" data-role="maintenance" onclick="selectRole('maintenance', this)">
+          <div class="dot"></div> Тех. персонал
+        </button>
+        <button class="role-tab role-tab-director" data-role="director" onclick="selectRole('director', this)">
+          <div class="dot"></div> Директор / Завуч
+        </button>
+        <button class="role-tab role-tab-admin" data-role="admin" onclick="selectRole('admin', this)">
+          <div class="dot"></div> Администрация
+        </button>
+      </div>
+
+      <div class="person-grid" id="personGrid"></div>
+
+      <div class="day-tabs" id="dayTabs">
+        <button class="day-tab active" data-day="0" onclick="selectDay(0, this)">Понедельник</button>
+        <button class="day-tab" data-day="1" onclick="selectDay(1, this)">Вторник</button>
+        <button class="day-tab" data-day="2" onclick="selectDay(2, this)">Среда</button>
+        <button class="day-tab" data-day="3" onclick="selectDay(3, this)">Четверг</button>
+        <button class="day-tab" data-day="4" onclick="selectDay(4, this)">Пятница</button>
+      </div>
+
+      <div class="sched-stats" id="schedStats"></div>
+
+      <div class="sched-outer" id="schedOuter">
+        <div class="sched-timeline" id="schedTimeline"></div>
+        <div class="sched-slots"   id="schedSlots"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="taskModal" onclick="closeModal(event)">
+  <div class="modal-box" style="position:relative">
+    <button class="modal-close" onclick="document.getElementById('taskModal').classList.remove('open')">✕</button>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <span id="modalIcon" style="font-size:28px"></span>
+      <div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-sub" id="modalSub"></div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">✦ Изменить через ИИ</div>
+    <div class="edit-input-wrap">
+      <textarea class="edit-input" id="editInput" rows="2"
+        placeholder="Напишите что угодно: «Физика 9А, кабинет 305» или «убрать урок»…"
+        onkeydown="handleEditKey(event)"></textarea>
+      <button class="edit-send-btn" id="editSendBtn" onclick="sendEditToAI()" title="Отправить (Enter)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+    <div class="edit-ai-spinner" id="editSpinner">
+      <div class="edit-ai-dot"></div><div class="edit-ai-dot"></div><div class="edit-ai-dot"></div>
+      <span>ИИ разбирает запрос…</span>
+    </div>
+    <div class="edit-preview" id="editPreview">
+      <div class="edit-preview-label">Предпросмотр</div>
+      <div class="edit-preview-card" id="editPreviewCard"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary btn-sm" id="saveSlotBtn" onclick="saveSlot()" style="display:none">💾 Сохранить</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('taskModal').classList.remove('open')">Закрыть</button>
+      <button class="clear-slot-btn" onclick="clearSlot()">Очистить слот</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../json/data.js"></script>
+<script src="../js/app.js"></script>
+<script>
+const user = Auth.require(['teacher','admin']);
+buildSidebar('staff-schedule', user.role);
+document.getElementById('topbarAvatar').textContent = initials(user.fullname || user.login);
+document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('ru-RU', {
+  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+});
+const mobileBtn = document.getElementById('mobileMenuBtn');
+if (mobileBtn) {
+  mobileBtn.innerHTML = ICONS.menu;
+  if (window.innerWidth < 1024) mobileBtn.style.display = 'flex';
+}
+
+// ── TIMES ─────────────────────────────────────────────────────────────
+const TIMES = [
+  { start: '07:30', end: '08:00', label: 'Утро'      },
+  { start: '08:00', end: '08:45', label: 'Урок 1'    },
+  { start: '08:45', end: '08:55', label: 'Перемена'  },
+  { start: '08:55', end: '09:40', label: 'Урок 2'    },
+  { start: '09:40', end: '09:50', label: 'Перемена'  },
+  { start: '09:50', end: '10:35', label: 'Урок 3'    },
+  { start: '10:35', end: '10:55', label: 'Большая п' },
+  { start: '10:55', end: '11:40', label: 'Урок 4'    },
+  { start: '11:40', end: '11:50', label: 'Перемена'  },
+  { start: '11:50', end: '12:35', label: 'Урок 5'    },
+  { start: '12:35', end: '12:45', label: 'Перемена'  },
+  { start: '12:45', end: '13:30', label: 'Урок 6'    },
+  { start: '13:30', end: '14:00', label: 'Обед'      },
+  { start: '14:00', end: '14:45', label: 'Урок 7'    },
+  { start: '14:45', end: '15:30', label: 'Послеурок' },
+];
+
+const WALK_SLOT = { type: 'walk', icon: '🚶', title: 'Прогулка', sub: null, ai: false };
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+function makeShort(name) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+/**
+ * Fill empty/missing slots with Прогулка after the last real lesson.
+ * "Real lesson" = type is not 'free', 'break', 'walk'.
+ * The incoming slots may be sparse (only filled time_indexes).
+ * We first expand them to TIMES.length, then apply walk logic.
+ */
+function applyWalkSlots(rawSlots) {
+  // Expand sparse slots to full TIMES grid
+  const full = Array.from({ length: TIMES.length }, (_, i) => {
+    const found = rawSlots.find(s => s.time_index === i || s.time_index === undefined);
+    // if slots don't use time_index — treat them positionally
+    return null;
+  });
+
+  let positional = false;
+  if (rawSlots.length && rawSlots[0].time_index === undefined) positional = true;
+
+  let expanded;
+  if (positional) {
+    // Slots are positional — pad with nulls to TIMES.length
+    expanded = Array.from({ length: TIMES.length }, (_, i) => rawSlots[i] || null);
+  } else {
+    // Slots use time_index
+    expanded = Array.from({ length: TIMES.length }, (_, i) => {
+      return rawSlots.find(s => Number(s.time_index) === i) || null;
+    });
+  }
+
+  // Find last index that has a meaningful slot (not free/break/null)
+  const EMPTY_TYPES = new Set(['free', 'break', 'walk', null]);
+  let lastReal = -1;
+  expanded.forEach((s, i) => {
+    if (s && !EMPTY_TYPES.has(s.type)) lastReal = i;
+  });
+
+  // Fill each slot: after lastReal → Прогулка; null slots before → free
+  return expanded.map((s, i) => {
+    if (i > lastReal && lastReal >= 0) return { ...WALK_SLOT };
+    if (!s) return { type: 'free', icon: '—', title: 'Свободный слот' };
+    return s;
+  });
+}
+
+// ── DATA ──────────────────────────────────────────────────────────────
+let PEOPLE = { teacher: [], maintenance: [], director: [], admin: [] };
+
+function renderAbsentBanner() {
+  const allStaff = Object.values(PEOPLE).flat();
+  const absent   = allStaff.filter(p => p.free === false);
+  let el = document.getElementById('absentBanner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'absentBanner';
+    el.style.cssText = 'display:none;margin-bottom:16px;padding:12px 16px;border-radius:12px;border:1.5px solid rgba(239,68,68,.3);background:rgba(239,68,68,.06);font-size:13px;color:#991b1b;display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+    document.getElementById('conflictPanel').after(el);
+  }
+  if (absent.length === 0) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  el.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Сегодня отсутствуют ${absent.length} чел.:</strong> ${absent.map(p => p.name).join(', ')}</span>
+  `;
+}
+
+async function loadStaff() {
+  try {
+    const WEBHOOK_URL ='https://asicapital.asia/webhook/43b0c4f2-d054-41b2-93d8-b158c00d85eb';
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get_staff' })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const raw = await res.json();
+    let data = raw;
+    if (Array.isArray(raw) && raw[0]?.json) data = raw.map(i => i.json);
+    else if (raw?.data) data = raw.data;
+    else if (raw?.rows) data = raw.rows;
+    else if (!Array.isArray(raw)) data = [raw];
+
+    const grouped = { teacher: [], maintenance: [], director: [], admin: [] };
+    for (const p of data) {
+      const item = p.fields || p.json || p;
+      const name    = item.name || item.fullname || item.ФИО || '';
+      const role    = item.role || item.роль || 'teacher';
+      const subject = item.subject || item.предмет || item.должность || '';
+      const color   = item.color || item.цвет || '#6366f1';
+      const id      = item.staff_id || item.id || item.ID || String(Math.random());
+      if (!name) continue;
+      const groupKey = role in grouped ? role : 'admin';
+      const free = item.free === true || item.free === 'true';
+      grouped[groupKey].push({
+        id:      String(id),
+        name:    name,
+        color:   color,
+        short:   makeShort(name),
+        subject: subject,
+        free:    free,
+      });
+    }
+    PEOPLE = grouped;
+    // Show absent banner
+    renderAbsentBanner();
+  } catch (err) {
+    console.error('Ошибка загрузки персонала:', err);
+    toast('Не удалось загрузить список персонала: ' + err.message, 'error');
+  }
+}
+
+function getDefaultSchedule() {
+  return TIMES.map((t, i) => ({
+    type: i % 4 === 0 ? 'free' : i % 3 === 1 ? 'break' : 'meeting',
+    icon: i % 3 === 1 ? '🚶' : '📋',
+    title: i % 3 === 1 ? 'Перемена' : `Задача ${i+1}`,
+    time_index: i
+  }));
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────
+let currentRole   = 'teacher';
+let currentPerson = null;
+let currentDay    = 0;
+
+// ── ROLE / PERSON / DAY ───────────────────────────────────────────────
+function selectRole(role, btn) {
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const people = PEOPLE[role];
+  if (people && people.length > 0) currentPerson = people[0].id;
+  renderPersonGrid(people || []);
+  loadSchedule();
+}
+
+function renderPersonGrid(people) {
+  document.getElementById('personGrid').innerHTML = people.map(p => {
+    const absent = p.free === false;
+    return `
+    <div class="person-card ${p.id === currentPerson ? 'selected' : ''} ${absent ? 'absent' : ''}"
+      onclick="selectPerson('${p.id}', this)" title="${absent ? 'Отсутствует сегодня' : 'В школе'}">
+      <div class="person-avatar" style="background:${absent ? '#ef4444' : p.color}">${p.short}</div>
+      <div style="flex:1;min-width:0">
+        <div class="person-name" style="${absent ? 'color:#ef4444' : ''}">${p.name}</div>
+        <div class="person-role-lbl" style="display:flex;align-items:center;gap:4px">
+          ${absent
+            ? `<span style="color:#ef4444;font-weight:700">● Отсутствует</span>`
+            : `<span style="color:#22c55e;font-weight:700">● В школе</span>`
+          }
+          ${p.subject ? `<span style="color:var(--gray)">· ${p.subject}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectPerson(id, el) {
+  currentPerson = id;
+  document.querySelectorAll('.person-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  loadSchedule();
+}
+
+function selectDay(day, btn) {
+  currentDay = day;
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  loadSchedule();
+}
+
+const DAYS = ['monday','tuesday','wednesday','thursday','friday'];
+
+// ── LOAD ──────────────────────────────────────────────────────────────
+async function loadSchedule() {
+  if (!currentPerson) return;
+  const slotsEl = document.getElementById('schedSlots');
+  slotsEl.innerHTML = '<div style="padding:24px;color:var(--gray);text-align:center">⏳ Загрузка расписания…</div>';
+  try {
+    const res = await fetch('https://asicapital.asia/webhook/43b0c4f2-d054-41b2-93d8-b158c00d85eb', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action:   'get_staff_schedule',
+        staff_id: currentPerson,
+        day:      DAYS[currentDay]
+      })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const raw = await res.json();
+    let slots = raw;
+    if (Array.isArray(raw) && raw[0]?.json) slots = raw.map(i => i.json);
+    else if (raw?.data) slots = raw.data;
+    else if (!Array.isArray(raw)) slots = [raw];
+
+const parsedSlots = slots.flatMap(row => {
+  try {
+    let s = row.slots;
+    console.log('RAW slots:', s, typeof s); // ← добавьте это
+    
+    if (!s) return [];
+    
+    for (let i = 0; i < 8; i++) {
+      if (Array.isArray(s)) break;
+      if (typeof s === 'object' && s !== null) { s = [s]; break; }
+      if (typeof s !== 'string') break;
+      try { s = JSON.parse(s); } catch { break; }
+    }
+    
+    console.log('PARSED slots:', s); // ← и это
+    return Array.isArray(s) ? s : (s ? [s] : []);
+  } catch(e) {
+    console.warn('Не удалось распарсить slots:', row.slots, e);
+    return [];
+  }
+});
+
+    const finalSlots = applyWalkSlots(parsedSlots.length ? parsedSlots : getDefaultSchedule());
+    renderSchedule(finalSlots);
+  } catch (err) {
+    console.error('Ошибка загрузки расписания:', err);
+    toast('Не удалось загрузить расписание: ' + err.message, 'error');
+    renderSchedule(applyWalkSlots(getDefaultSchedule()));
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────
+function renderSchedule(slots) {
+  // Timeline
+  document.getElementById('schedTimeline').innerHTML = TIMES.map(t => `
+    <div class="sched-timeline-cell">
+      <div class="time-label">${t.start}</div>
+      <div class="time-end">${t.end}</div>
+    </div>
+  `).join('');
+
+  // Slots
+  document.getElementById('schedSlots').innerHTML = slots.map((s, i) => `
+    <div class="sched-slot${s.type === 'walk' ? ' is-walk' : ''}" onclick="${s.type !== 'walk' ? `openSlotModal(${i})` : ''}">
+      <div class="slot-card slot-${s.type}">
+        <span class="slot-icon">${s.icon}</span>
+        <div class="slot-text">
+          <div class="slot-title">${s.title}</div>
+          ${s.sub ? `<div class="slot-sub">${s.sub}</div>` : ''}
+        </div>
+        ${s.ai ? `<span class="slot-ai-badge">✦ ИИ</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  // Stats
+  const lessons   = slots.filter(s => s.type === 'lesson').length;
+  const aiSlots   = slots.filter(s => s.ai).length;
+  const conflicts = slots.filter(s => s.type === 'conflict').length;
+  const meetings  = slots.filter(s => s.type === 'meeting' || s.type === 'visit').length;
+  const walks     = slots.filter(s => s.type === 'walk').length;
+
+  document.getElementById('schedStats').innerHTML = `
+    <div class="sched-stat-card"><div class="sched-stat-num" style="color:var(--p1)">${lessons}</div><div class="sched-stat-lbl">Уроков</div></div>
+    <div class="sched-stat-card"><div class="sched-stat-num" style="color:#8b5cf6">${meetings}</div><div class="sched-stat-lbl">Встреч</div></div>
+    <div class="sched-stat-card"><div class="sched-stat-num" style="color:#22c55e">${walks}</div><div class="sched-stat-lbl">Прогулка</div></div>
+    <div class="sched-stat-card"><div class="sched-stat-num" style="color:var(--green)">${aiSlots}</div><div class="sched-stat-lbl">ИИ-задач</div></div>
+    <div class="sched-stat-card"><div class="sched-stat-num" style="color:${conflicts > 0 ? 'var(--red)' : 'var(--green)'}">${conflicts}</div><div class="sched-stat-lbl">Конфликтов</div></div>
+  `;
+
+  // Conflict panel
+  const panel = document.getElementById('conflictPanel');
+  if (conflicts > 0) {
+    panel.classList.add('visible');
+    document.getElementById('conflictList').innerHTML = slots
+      .filter(s => s.type === 'conflict')
+      .map(s => `<div class="conflict-item">⚠️ ${s.title}: ${s.sub || ''}</div>`)
+      .join('');
+  } else {
+    panel.classList.remove('visible');
+  }
+
+  window._currentSlots = slots;
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────
+let _editingIndex = null;
+let _pendingSlot  = null;
+
+const TYPE_ICONS = {
+  lesson:'📚', break:'🚶', duty:'🏛️', lunch:'🍽️', meeting:'📋',
+  check:'📓', repair:'🔧', inspection:'🔍', free:'—', visit:'👁️',
+  conflict:'⚠️', walk:'🚶'
+};
+
+function openSlotModal(i) {
+  const s = window._currentSlots?.[i];
+  if (!s || s.type === 'walk') return;
+  _editingIndex = i;
+  _pendingSlot  = null;
+
+  document.getElementById('modalIcon').textContent  = s.icon || TYPE_ICONS[s.type] || '📋';
+  document.getElementById('modalTitle').textContent = s.title || TIMES[i].label;
+  document.getElementById('modalSub').textContent   = `${TIMES[i].start} – ${TIMES[i].end}${s.sub ? ' · ' + s.sub : ''}`;
+  document.getElementById('editInput').value        = '';
+  document.getElementById('editPreview').classList.remove('visible');
+  document.getElementById('editSpinner').classList.remove('visible');
+  document.getElementById('saveSlotBtn').style.display = 'none';
+  document.getElementById('taskModal').classList.add('open');
+  setTimeout(() => document.getElementById('editInput').focus(), 200);
+}
+
+function handleEditKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendEditToAI(); }
+}
+
+async function sendEditToAI() {
+  const text = document.getElementById('editInput').value.trim();
+  if (!text) return;
+
+  document.getElementById('editSendBtn').disabled = true;
+  document.getElementById('editSpinner').classList.add('visible');
+  document.getElementById('editPreview').classList.remove('visible');
+  document.getElementById('saveSlotBtn').style.display = 'none';
+
+  // Small delay for UX
+  await new Promise(r => setTimeout(r, 300));
+
+  try {
+    const parsed = parseSlotText(text, _editingIndex);
+    _pendingSlot = parsed;
+    showPreview(parsed);
+  } catch(e) {
+    toast('Не удалось разобрать текст: ' + e.message, 'error');
+  } finally {
+    document.getElementById('editSendBtn').disabled = false;
+    document.getElementById('editSpinner').classList.remove('visible');
+  }
+}
+
+// ── LOCAL SLOT PARSER ─────────────────────────────────────────────────
+// Разбирает свободный текст и возвращает slot-объект
+function parseSlotText(text, idx) {
+  const t = text.toLowerCase().trim();
+
+  // Detect clear/free intent
+  if (/убр|удал|очист|свобод|пусто|free/.test(t)) {
+    return { time_index: idx, type: 'free', icon: '—', title: 'Свободный слот', sub: null, ai: false };
+  }
+
+  // Detect type
+  let type = 'lesson';
+  let icon = '📚';
+
+  if (/перемен|break/.test(t))                           { type = 'break';      icon = '🚶'; }
+  else if (/обед|lunch/.test(t))                         { type = 'lunch';      icon = '🍽️'; }
+  else if (/дежур|duty/.test(t))                         { type = 'duty';       icon = '🏛️'; }
+  else if (/совещ|встреч|собран|планёрк|meeting/.test(t)){ type = 'meeting';    icon = '📋'; }
+  else if (/проверк|тетрад|check/.test(t))               { type = 'check';      icon = '📓'; }
+  else if (/ремонт|починить|repair/.test(t))             { type = 'repair';     icon = '🔧'; }
+  else if (/обход|осмотр|inspect/.test(t))               { type = 'inspection'; icon = '🔍'; }
+  else if (/посещ|визит|visit/.test(t))                  { type = 'visit';      icon = '👁️'; }
+  else if (/конфликт|conflict/.test(t))                  { type = 'conflict';   icon = '⚠️'; }
+
+  // Subject → icon mapping
+  const subjectIcons = {
+    'математик': '📐', 'алгебр': '📐', 'геометр': '📐',
+    'физик': '⚛️', 'хими': '🧪', 'биологи': '🌿',
+    'истори': '🏺', 'географи': '🌍', 'литератур': '📖',
+    'русск': '📝', 'казахск': '🇰🇿', 'английск': '🇬🇧',
+    'информатик': '💻', 'физкультур': '⚽', 'музык': '🎵',
+    'психологи': '🧠', 'химия': '🧪', 'рисован': '🎨',
+    'труд': '🔨', 'обж': '🛡️',
+  };
+  if (type === 'lesson') {
+    for (const [kw, ic] of Object.entries(subjectIcons)) {
+      if (t.includes(kw)) { icon = ic; break; }
+    }
+  }
+
+  // Extract title: capitalize original text up to comma/dash/newline or full text
+  const rawTitle = text.split(/[,\n\-–|]/)[0].trim();
+  const title = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
+
+  // Extract sub (everything after first separator)
+  const afterFirst = text.slice(rawTitle.length).replace(/^[,\-–|\s]+/, '').trim();
+  const sub = afterFirst || null;
+
+  return { time_index: idx, type, icon, title, sub, ai: false };
+}
+
+function showPreview(slot) {
+  document.getElementById('editPreviewCard').innerHTML = `
+    <span style="font-size:22px">${slot.icon}</span>
+    <div>
+      <div style="font-weight:700;font-size:13px;color:var(--dark)">${slot.title}</div>
+      ${slot.sub ? `<div style="font-size:11px;color:var(--gray);margin-top:2px">${slot.sub}</div>` : ''}
+      <div style="font-size:11px;color:var(--p1);margin-top:2px;font-weight:600">${slot.type}</div>
+    </div>
+  `;
+  document.getElementById('editPreview').classList.add('visible');
+  document.getElementById('saveSlotBtn').style.display = '';
+}
+
+async function saveSlot() {
+  if (!_pendingSlot) return;
+
+  // Merge new slot into currentSlots (keep walk slots, replace edited index)
+  const updatedSlots = window._currentSlots.map((s, i) => {
+    if (i === _editingIndex) return _pendingSlot;
+    return s;
+  });
+
+  // Build the sparse array (exclude walk slots) for sending
+  const sparseSlots = updatedSlots
+    .filter(s => s && s.type !== 'walk' && s.type !== 'free')
+    .map(s => ({ ...s }));
+
+  // Double-serialize exactly as the DB expects
+  const slotsPayload = JSON.stringify(JSON.stringify(sparseSlots));
+
+  document.getElementById('saveSlotBtn').disabled = true;
+  try {
+    const res = await fetch('https://asicapital.asia/webhook/43b0c4f2-d054-41b2-93d8-b158c00d85eb', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action:   'set_staff_schedule',
+        staff_id: currentPerson,
+        day:      DAYS[currentDay],
+        slots:    slotsPayload
+      })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    toast('Расписание сохранено ✓', 'success');
+    document.getElementById('taskModal').classList.remove('open');
+    // Re-apply walk zones and re-render
+    const finalSlots = applyWalkSlots(sparseSlots);
+    renderSchedule(finalSlots);
+  } catch(e) {
+    toast('Ошибка сохранения: ' + e.message, 'error');
+  } finally {
+    document.getElementById('saveSlotBtn').disabled = false;
+  }
+}
+
+async function clearSlot() {
+  if (_editingIndex === null) return;
+  _pendingSlot = { time_index: _editingIndex, type: 'free', icon: '—', title: 'Свободный слот', sub: null, ai: false };
+  showPreview(_pendingSlot);
+  document.getElementById('editInput').value = '';
+}
+
+function closeModal(e) {
+  if (e?.target === document.getElementById('taskModal'))
+    document.getElementById('taskModal').classList.remove('open');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+loadStaff().then(() => {
+  const people = PEOPLE[currentRole];
+  if (people && people.length > 0) currentPerson = people[0].id;
+  renderPersonGrid(PEOPLE[currentRole] || []);
+  loadSchedule();
+});
+</script>
+</body>
+</html>
